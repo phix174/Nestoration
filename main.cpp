@@ -24,7 +24,8 @@ struct Cycle {
 
 const double CPU_FREQENCY = 1789773.0;
 const double TWELFTH_ROOT = pow(2.0, 1.0 / 12.0);
-const double C0 = 440 * pow(TWELFTH_ROOT, -57.0);
+const double A0 = 440.0 / pow(2, 4);
+const double C0 = A0 * pow(TWELFTH_ROOT, -9.0);
 double period_to_semitone(const samplesize &period) {
     double frequency = CPU_FREQENCY / period;
     return log(frequency / C0) / log(TWELFTH_ROOT);
