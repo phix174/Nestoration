@@ -17,12 +17,6 @@ typedef uint8_t samplevalue;
 typedef long sampleoff;
 typedef long samplesize;
 
-struct Run {
-    samplevalue value;
-    sampleoff start;
-    samplesize length;
-};
-
 struct Cycle {
     sampleoff start;
     samplesize length;
@@ -65,35 +59,6 @@ QVector<Cycle> read_cycles() {
     return cycles;
 }
 
-QVector<Run> read_runs() {
-    QVector<Run> runs;
-    fstream wavfile("/home/don/storage/code/qt/creator2/creator2/ducktales-5ch-10.wav", ios_base::in);
-    wavfile.seekg(0, ios_base::end);
-    streamsize filesize = wavfile.tellg();
-    cout << "File size: " << filesize << endl;
-    char frame[5];
-    streamoff sample_start = 44;
-    wavfile.seekg(sample_start);
-    wavfile.read(frame, 5);
-    char previous_value = frame[0];
-    streamoff previous_start = sample_start;
-    uint8_t calcvalue;
-    for (streamoff i = sample_start + 5; i < filesize; i += 5) {
-        wavfile.read(frame, 5);
-        if (frame[0] != previous_value) {
-            calcvalue = (uint8_t)((previous_value + 128) << 3);
-            Run run({ calcvalue, (previous_start - sample_start) / 5, (i - previous_start) / 5 });
-            runs.push_back(run);
-            //cout << (int)run.value << " " << run.start << " " << run.length << endl;
-            //cout << i << " " << (int)previous_value << " " << i-previous_start << endl;
-            previous_value = frame[0];
-            previous_start = i;
-        }
-    }
-    cout << "Run count: " << runs.size() << endl;
-    return runs;
-}
-
 /*
  * Pulses:
  *
@@ -130,23 +95,6 @@ QList<QObject *> find_tones(QVector<Cycle> &cycles) {
 
 int main(int argc, char *argv[])
 {
-    /*
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication app(argc, argv);
-    QQmlApplicationEngine engine;
-    const QUrl url(QStringLiteral("qrc:/main.qml"));
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
-                     &app, [url](QObject *obj, const QUrl &objUrl) {
-        if (!obj && url == objUrl)
-            QCoreApplication::exit(-1);
-    }, Qt::QueuedConnection);
-    engine.load(url);
-
-    cout << "Reading cycles" << endl;
-    QVector<Cycle> cycles = read_cycles();
-    QList<QObject *> tones = find_tones(cycles);
-    */
-
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
