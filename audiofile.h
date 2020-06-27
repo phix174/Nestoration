@@ -6,8 +6,9 @@
 class AudioFile
 {
 public:
-    AudioFile(const char *file_name);
+    AudioFile();
 
+    void open(const char *file_name);
     void read_block(char block[], std::streamsize &bytes_read);
     void close();
 

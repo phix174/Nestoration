@@ -33,7 +33,13 @@ double period_to_semitone(const samplesize &period) {
 QVector<Cycle> read_cycles() {
     QVector<Cycle> cycles;
     Cycle cycle;
-    AudioFile audio_file("/home/don/storage/code/qt/creator2/creator2/ducktales-5ch-10.wav");
+    AudioFile audio_file;
+    try {
+        audio_file.open("/home/don/storage/code/qt/creator2/creator2/ducktales-5ch-10.wav.gz");
+    } catch (int e) {
+        cout << "Failed to open WAV file." << endl;
+        return cycles;
+    }
     char *block = new char[1789773 * 5];
     streamsize bytes_read = 0;
     sampleoff i = 0;
@@ -41,11 +47,12 @@ QVector<Cycle> read_cycles() {
     char previous_value;
 
     audio_file.read_block(block, bytes_read);
-    if (bytes_read > 0) {
-        previous_value = block[j];
-        cycle = { 0, 0 };
-        j += 5;
+    if (bytes_read == 0) {
+        return cycles;
     }
+    previous_value = block[j];
+    cycle = { 0, 0 };
+    j += 5;
     while (bytes_read) {
         while (j < bytes_read) {
             if (block[j] == -128 && previous_value != -128) {
@@ -60,7 +67,8 @@ QVector<Cycle> read_cycles() {
         j = 0;
         audio_file.read_block(block, bytes_read);
     }
-    // TODO: push last cycle
+    cycle.length = i - cycle.start;
+    cycles.push_back(cycle);
     delete[] block;
     audio_file.close();
     cout << "Cycle count: " << cycles.size() << endl;
@@ -82,6 +90,7 @@ QVector<Cycle> read_cycles() {
 
 QList<QObject *> find_tones(QVector<Cycle> &cycles) {
     QList<QObject *> tones;
+    if (cycles.length() == 0) return tones;
     ToneObject *tone;
     sampleoff tone_start;
     tone_start = cycles[0].start;

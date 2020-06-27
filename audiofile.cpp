@@ -85,7 +85,10 @@ struct WAVheader {
     uint32_t subchunk2_size;
 };
 
-AudioFile::AudioFile(const char *file_name)
+AudioFile::AudioFile() {
+}
+
+void AudioFile::open(const char *file_name)
 {
     struct archive_entry *entry;
     int result;
@@ -93,15 +96,17 @@ AudioFile::AudioFile(const char *file_name)
     m_archive = archive_read_new();
     archive_read_support_filter_gzip(m_archive);
     archive_read_support_format_raw(m_archive);
-    std::cout << file_name << std::endl;
     result = archive_read_open_filename(m_archive, file_name, 1048576);
     if (result != ARCHIVE_OK) {
         std::cout << archive_error_string(m_archive) << std::endl;
         throw 1;
     }
     if (archive_read_next_header(m_archive, &entry) == ARCHIVE_OK) {
-        std::cout << "File Size: " << archive_entry_size(entry) << std::endl;
         archive_read_data(m_archive, &header, 44);
+        if (header.audio_format != 1) throw 3;
+        if (header.num_channels != 5) throw 3;
+        if (header.sample_rate != 1789773) throw 3;
+        if (header.bits_per_sample != 8) throw 3;
     }
 }
 
