@@ -62,6 +62,7 @@ QVector<Cycle> read_cycles() {
     }
     // TODO: push last cycle
     delete[] block;
+    audio_file.close();
     cout << "Cycle count: " << cycles.size() << endl;
     return cycles;
 }

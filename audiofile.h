@@ -9,6 +9,7 @@ public:
     AudioFile(const char *file_name);
 
     void read_block(char block[], std::streamsize &bytes_read);
+    void close();
 
 private:
     struct archive *m_archive;

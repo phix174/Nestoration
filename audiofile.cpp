@@ -103,13 +103,15 @@ AudioFile::AudioFile(const char *file_name)
         std::cout << "File Size: " << archive_entry_size(entry) << std::endl;
         archive_read_data(m_archive, &header, 44);
     }
-    /* Should put this somewhere
-    result = archive_read_free(m_archive);
-    if (result != ARCHIVE_OK)
-        throw 2;
-    */
 }
 
 void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
     bytes_read = archive_read_data(m_archive, block, 1789773 * 5);
+}
+
+void AudioFile::close() {
+    int result;
+    result = archive_read_free(m_archive);
+    if (result != ARCHIVE_OK)
+        throw 2;
 }
