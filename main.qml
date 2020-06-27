@@ -40,36 +40,27 @@ ApplicationWindow {
         MouseArea {
             anchors.fill: parent
             onWheel: {
-                var outside_old = Math.max(0, (mainrow.width - scroller.width / itemsScale.xScale) / mainrow.width);
-                var scroll_old = 0;
-                if (outside_old > 0) {
-                    scroll_old = scroller.ScrollBar.horizontal.position / outside_old;
-                }
-                var leftEdge_old = outside_old * scroll_old;
-                var rightEdge_old = leftEdge_old + (1 - outside_old);
+                var position_old = scroller.ScrollBar.horizontal.position;
                 var scale_factor = 1.2;
                 if (wheel.angleDelta.y < 0) {
-                    if (itemsScale.xScale / scale_factor > root.width / mainrow.width){
+                    if (itemsScale.xScale / scale_factor > root.width / mainrow.width) {
+                        // If zooming out wouldn't zoom out too far, go ahead and do it.
                         scale_factor = 1 / scale_factor;
                     } else {
+                        // Otherwise, only zoom out as much as needed to fit the whole file.
                         scale_factor = (root.width / mainrow.width) / itemsScale.xScale
                     }
                 } else if (itemsScale.xScale * scale_factor > 1) {
+                    // If zooming in would zoom in too far, only zoom in to 1:1.
                     scale_factor = 1;
                 }
                 var mouse_x = wheel.x / (mainrow.width * itemsScale.xScale);
-                var leftEdge_new = Math.max(0, leftEdge_old + (mouse_x - leftEdge_old) * (1 - 1 / scale_factor));
-                var rightEdge_new = Math.min(1, rightEdge_old - (rightEdge_old - mouse_x) * (1 - 1 / scale_factor));
-                var denominator = leftEdge_new + (1 - rightEdge_new)
-                var scroll_new = 0
-                if (denominator > 0) {
-                    scroll_new = leftEdge_new / denominator;
+                var position_new = Math.max(0, position_old + (mouse_x - position_old) * (1 - 1 / scale_factor));
+                itemsScale.xScale *= scale_factor;
+                if (position_new + scroller.ScrollBar.horizontal.size > 1) {
+                    position_new = Math.max(0, 1 - scroller.ScrollBar.horizontal.size);
                 }
-                if (scale_factor > 0) {
-                    itemsScale.xScale *= scale_factor;
-                    var outside_new = Math.max(0, (mainrow.width - scroller.width / itemsScale.xScale) / mainrow.width);
-                    scroller.ScrollBar.horizontal.position = scroll_new * outside_new;
-                }
+                scroller.ScrollBar.horizontal.position = position_new;
             }
         }
         Row {
