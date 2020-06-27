@@ -42,32 +42,33 @@ QVector<Cycle> read_cycles() {
     }
     char *block = new char[1789773 * 5];
     streamsize bytes_read = 0;
-    sampleoff i = 0;
-    streamoff j = 0;
+    sampleoff file_sample_i = 0;
+    streamoff block_i = 0;
     char previous_value;
 
     audio_file.read_block(block, bytes_read);
     if (bytes_read == 0) {
         return cycles;
     }
-    previous_value = block[j];
+    previous_value = block[block_i];
     cycle = { 0, 0 };
-    j += 5;
+    file_sample_i += 1;
+    block_i += 5;
     while (bytes_read) {
-        while (j < bytes_read) {
-            if (block[j] == -128 && previous_value != -128) {
-                cycle.length = i - cycle.start;
+        while (block_i < bytes_read) {
+            if (block[block_i] == -128 && previous_value != -128) {
+                cycle.length = file_sample_i - cycle.start;
                 cycles.push_back(cycle);
-                cycle = { i, 0 };
+                cycle = { file_sample_i, 0 };
             }
-            previous_value = block[j];
-            i += 1;
-            j += 5;
+            previous_value = block[block_i];
+            file_sample_i += 1;
+            block_i += 5;
         }
-        j = 0;
+        block_i = 0;
         audio_file.read_block(block, bytes_read);
     }
-    cycle.length = i - cycle.start;
+    cycle.length = file_sample_i - cycle.start;
     cycles.push_back(cycle);
     delete[] block;
     audio_file.close();
