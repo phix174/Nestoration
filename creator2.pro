@@ -14,6 +14,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        audiofile.cpp \
         main.cpp \
         toneobject.cpp
 
@@ -31,4 +32,12 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    audiofile.h \
     toneobject.h
+
+win32:CONFIG(release, debug|release): LIBS += -L/usr/lib/x86_64-linux-gnu/release/ -larchive
+else:win32:CONFIG(debug, debug|release): LIBS += -L/usr/lib/x86_64-linux-gnu/debug/ -larchive
+else:unix: LIBS += -L/usr/lib/x86_64-linux-gnu/ -larchive
+
+INCLUDEPATH += /usr/lib/x86_64-linux-gnu
+DEPENDPATH += /usr/lib/x86_64-linux-gnu

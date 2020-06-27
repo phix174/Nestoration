@@ -6,9 +6,8 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
-#include <archive.h>
-#include <archive_entry.h>
 
+#include "audiofile.h"
 #include "toneobject.h"
 
 using namespace std;
@@ -34,28 +33,35 @@ double period_to_semitone(const samplesize &period) {
 QVector<Cycle> read_cycles() {
     QVector<Cycle> cycles;
     Cycle cycle;
-    fstream wavfile;
-    samplesize sample_count;
-    char frame[5];
+    AudioFile audio_file("/home/don/storage/code/qt/creator2/creator2/ducktales-5ch-10.wav");
+    char *block = new char[1789773 * 5];
+    streamsize bytes_read = 0;
+    sampleoff i = 0;
+    streamoff j = 0;
     char previous_value;
 
-    wavfile.open("/home/don/storage/code/qt/creator2/creator2/ducktales-5ch-10.wav", ios_base::in);
-    wavfile.seekg(0, ios_base::end);
-    sample_count = (wavfile.tellg() - (streamoff)44) / 5;
-    //cout << "Sample count: " << sample_count << endl;
-    wavfile.seekg(44);
-    wavfile.read(frame, 5);
-    previous_value = frame[0];
-    cycle = { 0, 0 };
-    for (sampleoff i = 1; i < sample_count; i++) {
-        wavfile.read(frame, 5);
-        if (frame[0] == -128 && previous_value != -128) {
-            cycle.length = i - cycle.start;
-            cycles.push_back(cycle);
-            cycle = { i, 0 };
-        }
-        previous_value = frame[0];
+    audio_file.read_block(block, bytes_read);
+    if (bytes_read > 0) {
+        previous_value = block[j];
+        cycle = { 0, 0 };
+        j += 5;
     }
+    while (bytes_read) {
+        while (j < bytes_read) {
+            if (block[j] == -128 && previous_value != -128) {
+                cycle.length = i - cycle.start;
+                cycles.push_back(cycle);
+                cycle = { i, 0 };
+            }
+            previous_value = block[j];
+            i += 1;
+            j += 5;
+        }
+        j = 0;
+        audio_file.read_block(block, bytes_read);
+    }
+    // TODO: push last cycle
+    delete[] block;
     cout << "Cycle count: " << cycles.size() << endl;
     return cycles;
 }
@@ -82,13 +88,13 @@ QList<QObject *> find_tones(QVector<Cycle> &cycles) {
     for (int i = 1; i < cycles.size(); i++) {
         if (cycles[i].length != cycles[i-1].length) {
             tone->setLength(cycles[i].start - tone_start);
-            cout << "Semitone " << tone->semitone_id() << " for " << tone->length() / 1789773.0 << " sec" << endl;
+            //cout << "Semitone " << tone->semitone_id() << " for " << tone->length() / 1789773.0 << " sec" << endl;
             tones.push_back(tone);
             tone_start = cycles[i].start;
             tone = new ToneObject(period_to_semitone(cycles[i].length), 0);
         }
     }
-    cout << "Semitone " << tone->semitone_id() << " for " << tone->length() / 1789773.0 << " sec" << endl;
+    //cout << "Semitone " << tone->semitone_id() << " for " << tone->length() / 1789773.0 << " sec" << endl;
     tones.push_back(tone);
     cout << "Tone count: " << tones.size() << endl;
     return tones;
@@ -99,7 +105,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
+    cout << "Reading cycles..." << endl;
     QVector<Cycle> cycles = read_cycles();
+    cout << "Finding tones..." << endl;
     QList<QObject *> tones = find_tones(cycles);
     engine.rootContext()->setContextProperty(QStringLiteral("toneList"), QVariant::fromValue(tones));
     const QUrl url(QStringLiteral("qrc:/main.qml"));
@@ -109,8 +117,5 @@ int main(int argc, char *argv[])
             QCoreApplication::exit(-1);
     }, Qt::QueuedConnection);
     engine.load(url);
-
-    cout << "Reading cycles" << endl;
-
     return app.exec();
 }
