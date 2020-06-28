@@ -111,6 +111,32 @@ QList<QObject *> find_tones(QVector<Cycle> &cycles) {
     return tones;
 }
 
+QStringList determine_range(QList<QObject *> &tones) {
+    QStringList notes;
+    int max_semitone = 0;
+    int min_semitone = 999;
+    QString octave;
+    for (int i = 0; i < tones.size(); i++) {
+        ToneObject *tone((ToneObject *)tones[i]);
+        if (ceil(tone->semitone_id()) > max_semitone) {
+            max_semitone = ceil(tone->semitone_id());
+        }
+        if (floor(tone->semitone_id()) < min_semitone && floor(tone->semitone_id()) >= 0) {
+            min_semitone = floor(tone->semitone_id());
+        }
+    }
+    QStringList note_names = {
+        "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"
+    };
+    for (int i = max_semitone; i >= min_semitone; i--) {
+        octave = (int)(i / 12);
+        cout << i << endl;
+        notes.push_back(note_names[i % 12] + octave);
+//        cout << (note_names[i % 12] + octave).toStdString() << endl;
+    }
+    return notes;
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -120,7 +146,10 @@ int main(int argc, char *argv[])
     QVector<Cycle> cycles = read_cycles();
     cout << "Finding tones..." << endl;
     QList<QObject *> tones = find_tones(cycles);
+    QStringList notes_range = determine_range(tones);
     engine.rootContext()->setContextProperty(QStringLiteral("toneList"), QVariant::fromValue(tones));
+    engine.rootContext()->setContextProperty(QStringLiteral("noteCount"), QVariant::fromValue(notes_range.size()));
+    engine.rootContext()->setContextProperty(QStringLiteral("highNote"), QVariant::fromValue(101));
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {

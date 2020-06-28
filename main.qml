@@ -8,34 +8,35 @@ ApplicationWindow {
     height: 1080
     title: qsTr("Scroll")
     property int noteHeight: 17
-    property int noteCount: 50
-
-    Rectangle {
-        anchors.fill: parent
-        color: "#444444"
-
-        Column {
-            anchors.fill: parent
-            spacing: 1
-
-            Repeater {
-                model: noteCount
-                delegate: Rectangle {
-                    width: parent.width
-                    height: noteHeight - 1
-                    color: { if ([1, 3, 6, 8, 10].includes((index+2) % 12)) { return "#555555" } else { return "#666666" } }
-                }
-            }
-        }
-    }
 
     ScrollView {
         id: scroller
-        width: parent.width
-        height: noteCount * noteHeight
-        clip: true
+        anchors.fill: parent
+        //clip: true
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
+        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+        contentHeight: noteCount * noteHeight
         contentWidth: mainrow.width * itemsScale.xScale
+
+        Rectangle {
+            height: parent.height
+            width: mainrow.width
+            color: "#444444"
+
+            Column {
+                anchors.fill: parent
+                spacing: 1
+
+                Repeater {
+                    model: noteCount
+                    delegate: Rectangle {
+                        width: parent.width
+                        height: noteHeight - 1
+                        color: { if ([1, 3, 6, 8, 10].includes((highNote - index) % 12)) { return "#555555" } else { return "#666666" } }
+                    }
+                }
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -63,6 +64,7 @@ ApplicationWindow {
                 scroller.ScrollBar.horizontal.position = position_new;
             }
         }
+
         Row {
             id: mainrow
             height: noteCount * noteHeight
@@ -73,7 +75,7 @@ ApplicationWindow {
             Repeater {
                 model: toneList
                 delegate: Rectangle {
-                    y: (86 - model.semitone_id) * noteHeight
+                    y: (highNote - model.semitone_id) * noteHeight
                     width: model.length
                     height: noteHeight - 1
                     color: "#00cc00"
