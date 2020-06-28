@@ -1,7 +1,7 @@
 #ifndef AUDIOFILE_H
 #define AUDIOFILE_H
 
-#include <iostream>
+#include <iosfwd>
 
 class AudioFile
 {

@@ -2,7 +2,6 @@
 #define TONEOBJECT_H
 
 #include <QObject>
-#include <cmath>
 
 //![0]
 class ToneObject : public QObject {

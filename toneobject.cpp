@@ -1,3 +1,4 @@
+#include <cmath>
 #include "toneobject.h"
 
 ToneObject::ToneObject(QObject *parent)
