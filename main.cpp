@@ -2,6 +2,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QVector>
+#include <QSurfaceFormat>
 
 #include <cmath>
 #include <iostream>
@@ -138,6 +139,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
+    QSurfaceFormat format;
+    format.setSamples(4);
+    QSurfaceFormat::setDefaultFormat(format);
     cout << "Reading cycles..." << endl;
     QVector<Cycle> cycles = read_cycles();
     cout << "Finding tones..." << endl;

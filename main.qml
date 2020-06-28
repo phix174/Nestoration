@@ -87,8 +87,9 @@ ApplicationWindow {
                     height: noteHeight - 1
                     color: "#00cc00"
                     Rectangle {
+                        y: 1
                         width: 1 / itemsScale.xScale
-                        height: noteHeight - 1
+                        height: noteHeight - 3
                         color: "#00cc00"
                     }
                 }
