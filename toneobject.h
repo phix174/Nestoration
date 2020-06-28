@@ -10,7 +10,7 @@ class ToneObject : public QObject {
 
     Q_PROPERTY(double semitone_id READ semitone_id WRITE setSemitoneId NOTIFY semitoneChanged)
     Q_PROPERTY(qint64 length READ length WRITE setLength NOTIFY lengthChanged)
-    Q_PROPERTY(QString name READ name)
+    Q_PROPERTY(QString name READ name CONSTANT)
 //![0]
 public:
     explicit ToneObject(QObject *parent = nullptr);
