@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
     QList<QObject *> tones = find_tones(cycles);
     QList<QObject *> notes_range = determine_range(tones);
     engine.rootContext()->setContextProperty(QStringLiteral("toneList"), QVariant::fromValue(tones));
-    engine.rootContext()->setContextProperty(QStringLiteral("noteCount"), QVariant::fromValue(notes_range.size()));
+    engine.rootContext()->setContextProperty(QStringLiteral("notesRange"), QVariant::fromValue(notes_range));
     engine.rootContext()->setContextProperty(QStringLiteral("highNote"), QVariant::fromValue(notes_range.front()));
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,

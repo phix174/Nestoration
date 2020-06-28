@@ -15,7 +15,7 @@ ApplicationWindow {
         //clip: true
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
         ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-        contentHeight: noteCount * noteHeight
+        contentHeight: notesRange.length * noteHeight
         contentWidth: mainrow.width * itemsScale.xScale
 
         Rectangle {
@@ -28,11 +28,18 @@ ApplicationWindow {
                 spacing: 1
 
                 Repeater {
-                    model: noteCount
+                    model: notesRange
                     delegate: Rectangle {
                         width: parent.width
                         height: noteHeight - 1
-                        color: { if ([1, 3, 6, 8, 10].includes((highNote.semitone_id - index) % 12)) { return "#555555" } else { return "#666666" } }
+                        color: { if ([1, 3, 6, 8, 10].includes((modelData.semitone_id) % 12)) { return "#555555" } else { return "#666666" } }
+                        Text {
+                            x: scroller.ScrollBar.horizontal.position * scroller.contentWidth
+                            text: modelData.name
+                            font.family: "monospace"
+                            font.pointSize: 10
+                            color: "#aaaaaa"
+                        }
                     }
                 }
             }
@@ -67,7 +74,7 @@ ApplicationWindow {
 
         Row {
             id: mainrow
-            height: noteCount * noteHeight
+            height: notesRange.length * noteHeight
             transform: Scale {
                 id: itemsScale
                 xScale: root.width / mainrow.width
