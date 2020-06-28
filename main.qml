@@ -32,7 +32,7 @@ ApplicationWindow {
                     delegate: Rectangle {
                         width: parent.width
                         height: noteHeight - 1
-                        color: { if ([1, 3, 6, 8, 10].includes((highNote - index) % 12)) { return "#555555" } else { return "#666666" } }
+                        color: { if ([1, 3, 6, 8, 10].includes((highNote.semitone_id - index) % 12)) { return "#555555" } else { return "#666666" } }
                     }
                 }
             }
@@ -75,8 +75,8 @@ ApplicationWindow {
             Repeater {
                 model: toneList
                 delegate: Rectangle {
-                    y: (highNote - model.semitone_id) * noteHeight
-                    width: model.length
+                    y: (highNote.semitone_id - modelData.semitone_id) * noteHeight
+                    width: modelData.length
                     height: noteHeight - 1
                     color: "#00cc00"
                     Rectangle {

@@ -33,3 +33,11 @@ void ToneObject::setLength(const qint64 &length)
         m_length = length;
     }
 }
+
+QString ToneObject::name() const
+{
+    int closest = round(m_semitone_id);
+    QString name_only = note_names[closest % 12];
+    QString octave = QString::number(closest / 12);
+    return name_only + octave;
+}
