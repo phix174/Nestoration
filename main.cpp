@@ -117,7 +117,6 @@ QList<QObject *> determine_range(QList<QObject *> &tones) {
     ToneObject *tone;
     int max_semitone = 0;
     int min_semitone = 999;
-    QString octave;
     for (int i = 0; i < tones.size(); i++) {
         tone = (ToneObject *)tones[i];
         if (ceil(tone->semitone_id()) > max_semitone) {
