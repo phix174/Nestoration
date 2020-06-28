@@ -35,9 +35,4 @@ HEADERS += \
     audiofile.h \
     toneobject.h
 
-win32:CONFIG(release, debug|release): LIBS += -L/usr/lib/x86_64-linux-gnu/release/ -larchive
-else:win32:CONFIG(debug, debug|release): LIBS += -L/usr/lib/x86_64-linux-gnu/debug/ -larchive
-else:unix: LIBS += -L/usr/lib/x86_64-linux-gnu/ -larchive
-
-INCLUDEPATH += /usr/lib/x86_64-linux-gnu
-DEPENDPATH += /usr/lib/x86_64-linux-gnu
+unix: LIBS += -larchive
