@@ -9,9 +9,30 @@ ApplicationWindow {
     title: qsTr("Scroll")
     property int noteHeight: 17
 
+    Rectangle {
+        id: tools
+        width: parent.width
+        height: 50
+        color: "#444444"
+
+        Row {
+            anchors.fill: parent
+            Button {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Open..."
+                onClicked: {
+                    rangerepeater.model = notesRange
+                    mainrepeater.model = toneList
+                }
+            }
+        }
+    }
+
     ScrollView {
         id: scroller
-        anchors.fill: parent
+        width: parent.width
+        y: 50
+        height: parent.height - 50
         //clip: true
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
         ScrollBar.vertical.policy: ScrollBar.AlwaysOn
@@ -28,7 +49,7 @@ ApplicationWindow {
                 spacing: 1
 
                 Repeater {
-                    model: notesRange
+                    id: rangerepeater
                     delegate: Rectangle {
                         width: parent.width
                         height: noteHeight - 1
@@ -80,7 +101,7 @@ ApplicationWindow {
                 xScale: root.width / mainrow.width
             }
             Repeater {
-                model: toneList
+                id: mainrepeater
                 delegate: Rectangle {
                     y: (highNote.semitone_id - modelData.semitone_id) * noteHeight
                     width: modelData.length
