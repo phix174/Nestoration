@@ -5,15 +5,15 @@ ScrollView {
     id: scroller
     width: parent.width
     height: parent.height - y
-    //clip: true
+    clip: true
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
     ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-    contentHeight: notesRange.length * noteHeight
+    contentHeight: 88 * noteHeight
     contentWidth: mainrow.width * itemsScale.xScale
 
     Rectangle {
         height: parent.height
-        width: mainrow.width
+        width: root.width
         color: "#444444"
 
         Column {
@@ -21,18 +21,20 @@ ScrollView {
             spacing: 1
 
             Repeater {
-                model: scroller.rangerepeater_model
+                model: 88
                 delegate: Rectangle {
-                    width: parent.width
+                    width: root.width
                     height: noteHeight - 1
-                    color: { if ([1, 3, 6, 8, 10].includes((modelData.semitone_id) % 12)) { return "#555555" } else { return "#666666" } }
+                    color: { if ([1, 3, 6, 8, 10].includes((88 - index) % 12)) { return "#555555" } else { return "#666666" } }
+                    /*
                     Text {
                         x: scroller.ScrollBar.horizontal.position * scroller.contentWidth
-                        text: modelData.name
+                        //text: modelData.name
                         font.family: "monospace"
                         font.pointSize: 10
                         color: "#aaaaaa"
                     }
+                    */
                 }
             }
         }
@@ -67,7 +69,7 @@ ScrollView {
 
     Row {
         id: mainrow
-        height: notesRange.length * noteHeight
+        height: 88 * noteHeight
         transform: Scale {
             id: itemsScale
             xScale: root.width / mainrow.width
@@ -75,8 +77,8 @@ ScrollView {
         Repeater {
             model: scroller.mainrepeater_model
             delegate: Rectangle {
-                y: (highNote.semitone_id - modelData.semitone_id) * noteHeight
-                width: modelData.length
+                y: (88 - model.semitone_id) * noteHeight
+                width: model.length
                 height: noteHeight - 1
                 color: "#00cc00"
                 Rectangle {

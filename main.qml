@@ -21,9 +21,9 @@ ApplicationWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Open..."
                 onClicked: {
-                    //audioFile.openClicked()
-                    toneviewer.rangerepeater_model = notesRange
-                    toneviewer.mainrepeater_model = toneList
+                    audioFile.openClicked()
+                    //toneviewer.rangerepeater_model = notesRange
+                    toneviewer.mainrepeater_model = channel0
                 }
             }
         }

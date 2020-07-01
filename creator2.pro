@@ -15,6 +15,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         audiofile.cpp \
+        channelmodel.cpp \
         main.cpp \
         toneobject.cpp
 
@@ -33,6 +34,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     audiofile.h \
+    channelmodel.h \
     toneobject.h
 
 unix: LIBS += -larchive
