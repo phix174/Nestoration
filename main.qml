@@ -21,8 +21,7 @@ ApplicationWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Open..."
                 onClicked: {
-                    audioFile.openClicked()
-                    //toneviewer.rangerepeater_model = notesRange
+                    openClicked()
                     toneviewer.mainrepeater_model = channel0
                     toneviewer.reset()
                 }
@@ -32,7 +31,6 @@ ApplicationWindow {
     ToneViewer {
         id: toneviewer
         y: tools.height
-        property variant rangerepeater_model
         property variant mainrepeater_model
     }
 }

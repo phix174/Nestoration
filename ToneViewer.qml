@@ -8,7 +8,8 @@ ScrollView {
     clip: true
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
     ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-    contentHeight: 88 * noteHeight
+    property int tone_count: highestTone - lowestTone
+    contentHeight: tone_count * noteHeight
     contentWidth: mainrow.width * itemsScale.xScale
     function reset() {
         scroller.ScrollBar.horizontal.position = 0;
@@ -17,7 +18,7 @@ ScrollView {
 
     Rectangle {
         height: parent.height
-        width: mainrow.width
+        width: Math.max(mainrow.width, root.width)
         color: "#444444"
 
         Column {
@@ -25,27 +26,28 @@ ScrollView {
             spacing: 1
 
             Repeater {
-                model: 88
+                model: tone_count
                 delegate: Rectangle {
-                    width: mainrow.width
+                    property int pitch_class: (highestTone - index) % 12
+                    property int octave: Math.floor((highestTone - index) / 12)
                     height: noteHeight - 1
-                    color: { if ([1, 3, 6, 8, 10].includes((88 - index) % 12)) { return "#555555" } else { return "#666666" } }
-                    /*
+                    width: parent.width
+                    color: { if ([1, 3, 6, 8, 10].includes(pitch_class)) { return "#555555" } else { return "#666666" } }
                     Text {
                         x: scroller.ScrollBar.horizontal.position * scroller.contentWidth
-                        //text: modelData.name
+                        text: ["C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"][pitch_class] + octave
                         font.family: "monospace"
                         font.pointSize: 10
                         color: "#aaaaaa"
                     }
-                    */
                 }
             }
         }
     }
 
     MouseArea {
-        anchors.fill: parent
+        height: parent.height
+        width: Math.max(mainrow.width, root.width)
         onWheel: {
             var position_old = scroller.ScrollBar.horizontal.position;
             var scale_factor = 1.2;
@@ -81,7 +83,7 @@ ScrollView {
         Repeater {
             model: scroller.mainrepeater_model
             delegate: Rectangle {
-                y: (88 - model.semitone_id) * noteHeight
+                y: (highestTone - model.semitone_id) * noteHeight
                 width: model.length
                 height: noteHeight - 1
                 color: "#00cc00"

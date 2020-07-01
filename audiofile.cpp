@@ -11,7 +11,7 @@
 
 
 AudioFile::AudioFile(QObject *parent)
-    : QObject(parent)
+    : QObject(parent), lowest_tone(8), highest_tone(8+88)
 {
 }
 
@@ -52,9 +52,12 @@ void AudioFile::openClicked()
     qDebug() << "Reading cycles..." << endl;
     QVector<Cycle> cycles = this->read_cycles();
     qDebug() << "Finding tones..." << endl;
-    this->channel0 = new ChannelModel { this->find_tones(cycles) };
-    emit modelChanged(this->channel0);
-    std::cout << "Clicked!" << std::endl;
+    QVector<ToneObject> tones { this->find_tones(cycles) };
+    this->channel0 = new ChannelModel { tones };
+    emit this->channel0Changed(this->channel0);
+    this->determine_range(tones);
+    emit this->lowestToneChanged(this->lowest_tone);
+    emit this->highestToneChanged(this->highest_tone);
 }
 
 double period_to_semitone(const samplesize &period) {
@@ -133,6 +136,24 @@ QVector<ToneObject> AudioFile::find_tones(QVector<Cycle> &cycles) {
     tones.push_back(tone);
     qDebug() << "Tone count: " << tones.size() << endl;
     return tones;
+}
+
+
+void AudioFile::determine_range(QVector<ToneObject> &tones) {
+    ToneObject *tone;
+    int max_semitone = -999;
+    int min_semitone = 999;
+    for (int i = 0; i < tones.size(); i++) {
+        tone = &tones[i];
+        if (ceil(tone->semitone_id) > max_semitone) {
+            max_semitone = ceil(tone->semitone_id);
+        }
+        if (floor(tone->semitone_id) < min_semitone && floor(tone->semitone_id) >= 0) {
+            min_semitone = floor(tone->semitone_id);
+        }
+    }
+    this->highest_tone = max_semitone;
+    this->lowest_tone = min_semitone;
 }
 
 void AudioFile::close() {

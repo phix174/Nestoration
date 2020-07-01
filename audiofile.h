@@ -41,7 +41,9 @@ class ToneObject;
 class AudioFile : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(ChannelModel *channel0 MEMBER channel0 NOTIFY modelChanged)
+    Q_PROPERTY(ChannelModel *channel0 MEMBER channel0 NOTIFY channel0Changed)
+    Q_PROPERTY(int lowestTone MEMBER lowest_tone NOTIFY lowestToneChanged)
+    Q_PROPERTY(int highestTone MEMBER highest_tone NOTIFY highestToneChanged)
 
 public:
     explicit AudioFile(QObject *parent = 0);
@@ -51,16 +53,21 @@ public:
     void close();
     QVector<Cycle> read_cycles();
     QVector<ToneObject> find_tones(QVector<Cycle> &cycles);
+    void determine_range(QVector<ToneObject> &tones);
 
 public slots:
     void openClicked();
 
 signals:
-    void modelChanged(ChannelModel *channel0);
+    void channel0Changed(ChannelModel *channel0);
+    void lowestToneChanged(int lowest_tone);
+    void highestToneChanged(int highest_tone);
 
 private:
     struct archive *m_archive;
     ChannelModel *channel0;
+    int lowest_tone;
+    int highest_tone;
 };
 
 #endif // AUDIOFILE_H
