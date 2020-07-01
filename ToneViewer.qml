@@ -10,10 +10,14 @@ ScrollView {
     ScrollBar.vertical.policy: ScrollBar.AlwaysOn
     contentHeight: 88 * noteHeight
     contentWidth: mainrow.width * itemsScale.xScale
+    function reset() {
+        scroller.ScrollBar.horizontal.position = 0;
+        itemsScale.xScale = Qt.binding(function() { return root.width / mainrow.width });
+    }
 
     Rectangle {
         height: parent.height
-        width: root.width
+        width: mainrow.width
         color: "#444444"
 
         Column {
@@ -23,7 +27,7 @@ ScrollView {
             Repeater {
                 model: 88
                 delegate: Rectangle {
-                    width: root.width
+                    width: mainrow.width
                     height: noteHeight - 1
                     color: { if ([1, 3, 6, 8, 10].includes((88 - index) % 12)) { return "#555555" } else { return "#666666" } }
                     /*

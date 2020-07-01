@@ -24,6 +24,7 @@ ApplicationWindow {
                     audioFile.openClicked()
                     //toneviewer.rangerepeater_model = notesRange
                     toneviewer.mainrepeater_model = channel0
+                    toneviewer.reset()
                 }
             }
         }
