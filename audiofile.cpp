@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <QFileDialog>
 #include <QDebug>
 
 #include <archive.h>
@@ -43,8 +44,9 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 
 void AudioFile::openClicked()
 {
+    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a gzipped 5-channel WAV file", QString(), "gzipped WAV (*.wav.gz)");
     try {
-        this->open("/home/don/storage/code/qt/creator2/creator2/ducktales-5ch-10.wav.gz");
+        this->open(qPrintable(file_name));
     } catch (int e) {
         qDebug() << "Failed to open WAV file." << endl;
         return;
