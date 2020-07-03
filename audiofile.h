@@ -2,6 +2,7 @@
 #define AUDIOFILE_H
 
 #include <QObject>
+#include <QVector>
 #include <iosfwd>
 #include <cmath>
 
@@ -9,9 +10,26 @@ typedef uint8_t samplevalue;
 typedef long sampleoff;
 typedef long samplesize;
 
-struct Cycle {
+enum CycleDuty {
+    Eighth,
+    Quarter,
+    Half,
+    ThreeQuarters,
+    None,
+    Irregular
+};
+
+struct Run {
     sampleoff start;
     samplesize length;
+    bool on;
+};
+
+struct Cycle {
+    sampleoff start;
+    CycleDuty duty;
+    double semitone_id;
+    QVector<samplesize> runs;
 };
 
 const double CPU_FREQENCY = 1789773.0;
@@ -51,7 +69,8 @@ public:
     void open(const char *file_name);
     void read_block(char block[], std::streamsize &bytes_read);
     void close();
-    QVector<Cycle> read_cycles();
+    QVector<Run> read_runs();
+    QVector<Cycle> runs_to_cycles(QVector<Run> &runs);
     QVector<ToneObject> find_tones(QVector<Cycle> &cycles);
     void determine_range(QVector<ToneObject> &tones);
 
@@ -69,5 +88,18 @@ private:
     int lowest_tone;
     int highest_tone;
 };
+
+/*
+ * Pulses:
+ *
+ * 1/8: _-______  20 + 20 + 120
+ *
+ * 1/4: _--_____  20 + 40 + 100
+ *
+ * 1/2: _----___  20 + 80 + 60
+ *
+ * 3/4: -__-----  20 + 40 + 100
+ *
+ */
 
 #endif // AUDIOFILE_H

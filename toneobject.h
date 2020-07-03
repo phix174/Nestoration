@@ -7,9 +7,10 @@ class ToneObject {
 
 public:
     explicit ToneObject();
-    explicit ToneObject(const double &semitone_id, const qint64 &length);
+    explicit ToneObject(const double &semitone_id, const short int &duty);
 
     double semitone_id;
+    short int duty;
     qint64 length;
 
     QString name() const;

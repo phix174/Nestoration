@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 
 #include <QFileDialog>
 #include <QDebug>
@@ -51,8 +52,10 @@ void AudioFile::openClicked()
         qDebug() << "Failed to open WAV file." << endl;
         return;
     }
-    qDebug() << "Reading cycles..." << endl;
-    QVector<Cycle> cycles = this->read_cycles();
+    qDebug() << "Reading runs..." << endl;
+    QVector<Run> runs = this->read_runs();
+    qDebug() << "Converting runs to cycles..." << endl;
+    QVector<Cycle> cycles = this->runs_to_cycles(runs);
     qDebug() << "Finding tones..." << endl;
     QVector<ToneObject> tones { this->find_tones(cycles) };
     this->channel0 = new ChannelModel { tones };
@@ -67,75 +70,117 @@ double period_to_semitone(const samplesize &period) {
     return log(frequency / C0) / log(TWELFTH_ROOT);
 }
 
-QVector<Cycle> AudioFile::read_cycles() {
-    QVector<Cycle> cycles;
-    Cycle cycle;
+QVector<Run> AudioFile::read_runs() {
+    QVector<Run> runs;
+    Run run;
     char *block = new char[1789773 * 5];
     std::streamsize bytes_read = 0;
     sampleoff file_sample_i = 0;
     std::streamoff block_i = 0;
-    char previous_value;
+    bool previous_value;
+    bool new_value;
 
     this->read_block(block, bytes_read);
     if (bytes_read == 0) {
-        return cycles;
+        return runs;
     }
-    previous_value = block[block_i];
-    cycle = { 0, 0 };
+    new_value = block[block_i] != -128;
+    run = { file_sample_i, 0, new_value };
+    previous_value = new_value;
     file_sample_i += 1;
     block_i += 5;
     while (bytes_read) {
         while (block_i < bytes_read) {
-            if (block[block_i] == -128 && previous_value != -128) {
-                cycle.length = file_sample_i - cycle.start;
-                cycles.push_back(cycle);
-                cycle = { file_sample_i, 0 };
+            new_value = block[block_i] != -128;
+            if (new_value != previous_value) {
+                run.length = file_sample_i - run.start;
+                runs.append(run);
+                run = { file_sample_i, 0, new_value };
             }
-            previous_value = block[block_i];
+            previous_value = new_value;
             file_sample_i += 1;
             block_i += 5;
         }
         block_i = 0;
         this->read_block(block, bytes_read);
     }
-    cycle.length = file_sample_i - cycle.start;
-    cycles.push_back(cycle);
+    run.length = file_sample_i - run.start;
+    runs.append(run);
+    qDebug() << run.start << run.length << run.on;
     delete[] block;
     this->close();
-    qDebug() << "Cycle count: " << cycles.size() << endl;
+    qDebug() << "Run count: " << runs.size() << endl;
+    return runs;
+}
+
+QVector<Cycle> AudioFile::runs_to_cycles(QVector<Run> &runs) {
+    QVector<Cycle> cycles;
+    const Cycle clear_cycle = { 0, CycleDuty::Irregular, -999, {} };
+    Cycle cycle;
+    samplesize cycle_length;
+    bool is_normal_size;
+    if (!runs.size()) {
+        return cycles;
+    }
+    for (int i=0; i+1 < runs.size(); i += 1) {
+        cycle = clear_cycle;
+        cycle.start = runs[i].start;
+        if (runs[i].on) {
+            cycle_length = runs[i].length + runs[i+1].length;
+            is_normal_size = (144 <= cycle_length && cycle_length <= 32768 && (cycle_length & 15) == 0);
+            if (is_normal_size) {
+                cycle.runs = { runs[i].length, runs[i+1].length };
+                if (runs[i].length * 7 == runs[i+1].length) {
+                    cycle.duty = CycleDuty::Eighth;
+                } else if (runs[i].length * 3 == runs[i+1].length) {
+                    cycle.duty = CycleDuty::Quarter;
+                } else if (runs[i].length == runs[i+1].length) {
+                    cycle.duty = CycleDuty::Half;
+                } else if (runs[i].length == runs[i+1].length * 3) {
+                    cycle.duty = CycleDuty::ThreeQuarters;
+                }
+                cycle.semitone_id = period_to_semitone(cycle_length);
+                i += 1;
+            } else {
+                cycle.runs = { runs[i].length };
+                cycle.duty = CycleDuty::Irregular;
+            }
+            cycles.append(cycle);
+        } else {
+            cycle.runs = { runs[i].length };
+            if (runs[i].length > 28672) {
+                cycle.duty = CycleDuty::None;
+            }
+            cycles.append(cycle);
+        }
+        qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle.runs.count();
+    }
+    qDebug() << "Cycle count: " << cycles.size();
     return cycles;
 }
 
-/*
- * Pulses:
- *
- * 1/8: _-______  20 + 20 + 120
- *
- * 1/4: _--_____  20 + 40 + 100
- *
- * 1/2: _----___  20 + 80 + 60
- *
- * 3/4: -__-----  20 + 40 + 100
- *
- */
-
 QVector<ToneObject> AudioFile::find_tones(QVector<Cycle> &cycles) {
     QVector<ToneObject> tones;
-    if (cycles.length() == 0) return tones;
+    ToneObject tone;
     sampleoff tone_start;
+    if (cycles.size() == 0) return tones;
     tone_start = cycles[0].start;
-    ToneObject tone { period_to_semitone(cycles[0].length), 0 };
+    tone.semitone_id = cycles[0].semitone_id;
+    tone.duty = cycles[0].duty;
     for (int i = 1; i < cycles.size(); i++) {
-        if (cycles[i].length != cycles[i-1].length) {
+        if (cycles[i].semitone_id != tone.semitone_id || cycles[i].duty != tone.duty) {
             tone.length = cycles[i].start - tone_start;
-            //cout << "Semitone " << tone->semitone_id() << " for " << tone->length() / 1789773.0 << " sec" << endl;
-            tones.push_back(tone);
+            qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec";
+            tones.append(tone);
             tone_start = cycles[i].start;
-            tone = ToneObject { period_to_semitone(cycles[i].length), 0 };
+            tone = ToneObject { cycles[i].semitone_id, cycles[i].duty };
         }
     }
-    //cout << "Semitone " << tone->semitone_id() << " for " << tone->length() / 1789773.0 << " sec" << endl;
-    tones.push_back(tone);
+    for (samplesize &len: cycles.last().runs) {
+        tone.length += len;
+    }
+    qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec";
+    tones.append(tone);
     qDebug() << "Tone count: " << tones.size() << endl;
     return tones;
 }

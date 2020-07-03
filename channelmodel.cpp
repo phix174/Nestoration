@@ -35,6 +35,9 @@ QVariant ChannelModel::data(const QModelIndex &index, int role) const
         case SemiToneIdRole:
             return QVariant(tone.semitone_id);
         break;
+        case DutyRole:
+            return QVariant(tone.duty);
+        break;
         case LengthRole:
             return QVariant(tone.length);
         break;
@@ -50,6 +53,7 @@ QHash<int, QByteArray> ChannelModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[SemiToneIdRole] = "semitone_id";
+    roles[DutyRole] = "duty";
     roles[LengthRole] = "length";
     roles[NameRole] = "name";
     return roles;

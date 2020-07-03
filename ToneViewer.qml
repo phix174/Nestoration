@@ -83,15 +83,35 @@ ScrollView {
         Repeater {
             model: scroller.mainrepeater_model
             delegate: Rectangle {
-                y: (highestTone - model.semitone_id) * noteHeight
+                y: if (model.semitone_id > -999) {
+                       (highestTone - model.semitone_id) * noteHeight
+                   } else {
+                       0
+                   }
                 width: model.length
-                height: noteHeight - 1
-                color: "#00cc00"
+                height: if (model.semitone_id > -999) {
+                           noteHeight - 1;
+                       } else {
+                           mainrow.height;
+                       }
+                color: if (model.duty === 0) {
+                           "#00cc00"
+                       } else if (model.duty === 1) {
+                           "#66cc00"
+                       } else if (model.duty === 2) {
+                           "#00cc66"
+                       } else if (model.duty === 3) {
+                           "#66cc66"
+                       } else if (model.duty === 4) {
+                           "#66000000"
+                       } else if (model.duty === 5) {
+                           "#990000"
+                       }
                 Rectangle {
                     y: 1
                     width: 1 / itemsScale.xScale
-                    height: noteHeight - 3
-                    color: "#00cc00"
+                    height: parent.height
+                    color: parent.color
                 }
             }
         }

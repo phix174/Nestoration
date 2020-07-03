@@ -3,13 +3,15 @@
 
 ToneObject::ToneObject()
 {
-    this->semitone_id = 0;
+    this->semitone_id = -999;
+    this->duty = 5;
     this->length = 0;
 }
 
-ToneObject::ToneObject(const double &semitone_id, const qint64 &length)
-    : semitone_id(semitone_id), length(length)
+ToneObject::ToneObject(const double &semitone_id, const short int &duty)
+    : semitone_id(semitone_id), duty(duty)
 {
+    this->length = 0;
 }
 
 QString ToneObject::name() const
