@@ -118,10 +118,8 @@ QVector<Cycle> AudioFile::runs_to_cycles(QVector<Run> &runs) {
     const Cycle clear_cycle = { 0, CycleDuty::Irregular, -999, {} };
     Cycle cycle;
     samplesize cycle_length;
+    samplesize runs_total;
     bool is_normal_size;
-    if (!runs.size()) {
-        return cycles;
-    }
     for (int i=0; i+1 < runs.size(); i += 1) {
         cycle = clear_cycle;
         cycle.start = runs[i].start;
@@ -141,6 +139,10 @@ QVector<Cycle> AudioFile::runs_to_cycles(QVector<Run> &runs) {
                 }
                 cycle.semitone_id = period_to_semitone(cycle_length);
                 i += 1;
+            } else if (cycle_length <= 32768) {
+                cycle.runs = { runs[i].length, runs[i+1].length };
+                cycle.semitone_id = period_to_semitone(cycle_length);
+                i += 1;
             } else {
                 cycle.runs = { runs[i].length };
                 cycle.duty = CycleDuty::Irregular;
@@ -153,7 +155,11 @@ QVector<Cycle> AudioFile::runs_to_cycles(QVector<Run> &runs) {
             }
             cycles.append(cycle);
         }
-        qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle.runs.count();
+        runs_total = 0;
+        for (samplesize &len: cycle.runs) {
+            runs_total += len;
+        }
+        qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle_length << cycle.runs.count() << runs_total;
     }
     qDebug() << "Cycle count: " << cycles.size();
     return cycles;
