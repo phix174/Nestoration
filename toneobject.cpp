@@ -6,12 +6,14 @@ ToneObject::ToneObject()
     this->semitone_id = -999;
     this->duty = 5;
     this->length = 0;
+    this->cycles = {};
 }
 
 ToneObject::ToneObject(const double &semitone_id, const short int &duty)
     : semitone_id(semitone_id), duty(duty)
 {
     this->length = 0;
+    this->cycles = {};
 }
 
 QString ToneObject::name() const

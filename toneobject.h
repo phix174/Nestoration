@@ -2,6 +2,33 @@
 #define TONEOBJECT_H
 
 #include <QStringList>
+#include <QVector>
+
+typedef uint8_t samplevalue;
+typedef long sampleoff;
+typedef long samplesize;
+
+enum CycleDuty {
+    Eighth,
+    Quarter,
+    Half,
+    ThreeQuarters,
+    None,
+    Irregular
+};
+
+struct Run {
+    sampleoff start;
+    samplesize length;
+    bool on;
+};
+
+struct Cycle {
+    sampleoff start;
+    CycleDuty duty;
+    double semitone_id;
+    QVector<samplesize> runs;
+};
 
 class ToneObject {
 
@@ -12,6 +39,7 @@ public:
     double semitone_id;
     short int duty;
     qint64 length;
+    QVector<Cycle> cycles;
 
     QString name() const;
 

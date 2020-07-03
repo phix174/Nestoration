@@ -173,19 +173,21 @@ QVector<ToneObject> AudioFile::find_tones(QVector<Cycle> &cycles) {
     tone_start = cycles[0].start;
     tone.semitone_id = cycles[0].semitone_id;
     tone.duty = cycles[0].duty;
+    tone.cycles.append(cycles[0]);
     for (int i = 1; i < cycles.size(); i++) {
         if (cycles[i].semitone_id != tone.semitone_id || cycles[i].duty != tone.duty) {
             tone.length = cycles[i].start - tone_start;
-            qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec";
+            qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
             tones.append(tone);
             tone_start = cycles[i].start;
             tone = ToneObject { cycles[i].semitone_id, cycles[i].duty };
         }
+        tone.cycles.append(cycles[i]);
     }
     for (samplesize &len: cycles.last().runs) {
         tone.length += len;
     }
-    qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec";
+    qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
     tones.append(tone);
     qDebug() << "Tone count: " << tones.size() << endl;
     return tones;

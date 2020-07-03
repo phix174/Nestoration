@@ -6,31 +6,7 @@
 #include <iosfwd>
 #include <cmath>
 
-typedef uint8_t samplevalue;
-typedef long sampleoff;
-typedef long samplesize;
-
-enum CycleDuty {
-    Eighth,
-    Quarter,
-    Half,
-    ThreeQuarters,
-    None,
-    Irregular
-};
-
-struct Run {
-    sampleoff start;
-    samplesize length;
-    bool on;
-};
-
-struct Cycle {
-    sampleoff start;
-    CycleDuty duty;
-    double semitone_id;
-    QVector<samplesize> runs;
-};
+#include "toneobject.h"
 
 const double CPU_FREQENCY = 1789773.0;
 const double TWELFTH_ROOT = pow(2.0, 1.0 / 12.0);
@@ -54,7 +30,6 @@ struct WAVheader {
 };
 
 class ChannelModel;
-class ToneObject;
 
 class AudioFile : public QObject
 {
