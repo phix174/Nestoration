@@ -75,7 +75,7 @@ ScrollView {
 
     Row {
         id: mainrow
-        height: 88 * noteHeight
+        height: tone_count * noteHeight
         transform: Scale {
             id: itemsScale
             xScale: root.width / mainrow.width
@@ -110,7 +110,7 @@ ScrollView {
                 Rectangle {
                     y: 1
                     width: 1 / itemsScale.xScale
-                    height: parent.height
+                    height: parent.height - 2
                     color: parent.color
                 }
             }
