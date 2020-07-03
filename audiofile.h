@@ -47,6 +47,7 @@ public:
     QVector<Run> read_runs();
     QVector<Cycle> runs_to_cycles(QVector<Run> &runs);
     QVector<ToneObject> find_tones(QVector<Cycle> &cycles);
+    void fix_tones(QVector<ToneObject> &tones);
     void determine_range(QVector<ToneObject> &tones);
 
 public slots:

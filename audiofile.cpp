@@ -58,6 +58,7 @@ void AudioFile::openClicked()
     QVector<Cycle> cycles = this->runs_to_cycles(runs);
     qDebug() << "Finding tones..." << endl;
     QVector<ToneObject> tones { this->find_tones(cycles) };
+    fix_tones(tones);
     this->channel0 = new ChannelModel { tones };
     emit this->channel0Changed(this->channel0);
     this->determine_range(tones);
@@ -118,7 +119,6 @@ QVector<Cycle> AudioFile::runs_to_cycles(QVector<Run> &runs) {
     const Cycle clear_cycle = { 0, CycleDuty::Irregular, -999, {} };
     Cycle cycle;
     samplesize cycle_length;
-    samplesize runs_total;
     bool is_normal_size;
     for (int i=0; i+1 < runs.size(); i += 1) {
         cycle = clear_cycle;
@@ -144,25 +144,32 @@ QVector<Cycle> AudioFile::runs_to_cycles(QVector<Run> &runs) {
                 cycle.semitone_id = period_to_semitone(cycle_length);
                 i += 1;
             } else {
+                cycle_length = runs[i].length;
                 cycle.runs = { runs[i].length };
                 cycle.duty = CycleDuty::Irregular;
             }
             cycles.append(cycle);
         } else {
+            cycle_length = runs[i].length;
             cycle.runs = { runs[i].length };
             if (runs[i].length > 28672) {
                 cycle.duty = CycleDuty::None;
             }
             cycles.append(cycle);
         }
-        runs_total = 0;
-        for (samplesize &len: cycle.runs) {
-            runs_total += len;
-        }
-        qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle_length << cycle.runs.count() << runs_total;
+        qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle_length << cycle.runs.count() << cycle_length;
     }
     qDebug() << "Cycle count: " << cycles.size();
     return cycles;
+}
+
+// TODO: Move this or something.
+samplesize cycle_length(Cycle &cycle) {
+    samplesize runs_total = 0;
+    for (samplesize &len: cycle.runs) {
+        runs_total += len;
+    }
+    return runs_total;
 }
 
 QVector<ToneObject> AudioFile::find_tones(QVector<Cycle> &cycles) {
@@ -184,15 +191,52 @@ QVector<ToneObject> AudioFile::find_tones(QVector<Cycle> &cycles) {
         }
         tone.cycles.append(cycles[i]);
     }
-    for (samplesize &len: cycles.last().runs) {
-        tone.length += len;
-    }
+    tone.length = cycle_length(cycles.last());
     qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
     tones.append(tone);
     qDebug() << "Tone count: " << tones.size() << endl;
     return tones;
 }
 
+void AudioFile::fix_tones(QVector<ToneObject> &tones) {
+    double a, b, c;
+    double midpoint;
+    samplesize left_size;
+    ToneObject left, right;
+    for (int i = 1; (i+1) < tones.size(); ) {
+        if (tones[i-1].duty >= 4 || tones[i].duty < 4 || tones[i+1].duty >= 4) {
+            // Skip tones with standard duty cycles
+            // and skip tones with nonstandard neighbors.
+             i += 1;
+            continue;
+        }
+        a = tones[i-1].semitone_id;
+        b = tones[i].semitone_id;
+        c = tones[i+1].semitone_id;
+        if (a < b && b < c) {
+            midpoint = (c - b) / (c - a);
+        } else if (a > b && b > c) {
+            midpoint = (b - c) / (a - c);
+        } else {
+            qDebug() << "This shouldn't happen.";
+        }
+        left_size = cycle_length(tones[i-1].cycles.last()) * midpoint;
+        qDebug() << "Dividing tone" << i << "into" << left_size << "and" << tones[i].length - left_size;
+        left.semitone_id = tones[i-1].semitone_id;
+        left.duty = tones[i-1].duty;
+        left.length = left_size;
+        // TODO: Add cycles to left tone
+        right.semitone_id = tones[i+1].semitone_id;
+        right.duty = tones[i+1].duty;
+        right.length = tones[i].length - left_size;
+        // TODO: Add cycles to right tone
+        tones.removeAt(i);
+        tones.insert(i, left);
+        i += 1;
+        tones.insert(i, right);
+        i += 1;
+    }
+}
 
 void AudioFile::determine_range(QVector<ToneObject> &tones) {
     ToneObject *tone;
