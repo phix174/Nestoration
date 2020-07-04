@@ -61,7 +61,7 @@ ScrollView {
                 }
             } else if (itemsScale.xScale * scale_factor > 1) {
                 // If zooming in would zoom in too far, only zoom in to 1:1.
-                scale_factor = 1;
+                scale_factor = 1 / itemsScale.xScale;
             }
             var mouse_x = wheel.x / (mainrow.width * itemsScale.xScale);
             var position_new = Math.max(0, position_old + (mouse_x - position_old) * (1 - 1 / scale_factor));
@@ -103,15 +103,16 @@ ScrollView {
                        } else if (model.duty === 3) {
                            "#66cc66"
                        } else if (model.duty === 4) {
-                           "#66000000"
+                           "#22000000"
                        } else if (model.duty === 5) {
-                           "#990000"
+                           "#cc0000"
                        }
+                z: if (model.duty === 5) { 1 } else { 0 }
                 Rectangle {
-                    y: 1
                     width: 1 / itemsScale.xScale
-                    height: parent.height - 2
+                    height: parent.height
                     color: parent.color
+                    visible: if (model.duty === 4) { false } else { true }
                 }
             }
         }
