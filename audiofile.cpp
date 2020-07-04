@@ -46,6 +46,9 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 void AudioFile::openClicked()
 {
     QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a gzipped 5-channel WAV file", QString(), "gzipped WAV (*.wav.gz)");
+    if (file_name == "") {
+        return;
+    }
     try {
         this->open(qPrintable(file_name));
     } catch (int e) {
