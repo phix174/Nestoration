@@ -38,10 +38,12 @@ public:
 
     double semitone_id;
     short int duty;
-    qint64 length;
+    samplesize length;
     QVector<Cycle> cycles;
 
     QString name() const;
+    samplesize match_before(ToneObject &before, samplesize max_length = 0);
+    samplesize match_after(ToneObject &after, samplesize max_length = 0);
 
 private:
 };

@@ -58,7 +58,9 @@ void AudioFile::openClicked()
     QVector<Cycle> cycles = this->runs_to_cycles(runs);
     qDebug() << "Finding tones..." << endl;
     QVector<ToneObject> tones { this->find_tones(cycles) };
-    fix_tones(tones);
+    fix_transitional_tones(tones);
+    fix_trailing_tones(tones);
+    fix_leading_tones(tones);
     this->channel0 = new ChannelModel { tones };
     emit this->channel0Changed(this->channel0);
     this->determine_range(tones);
@@ -107,7 +109,7 @@ QVector<Run> AudioFile::read_runs() {
     }
     run.length = file_sample_i - run.start;
     runs.append(run);
-    qDebug() << run.start << run.length << run.on;
+    //qDebug() << run.start << run.length << run.on;
     delete[] block;
     this->close();
     qDebug() << "Run count: " << runs.size() << endl;
@@ -157,7 +159,7 @@ QVector<Cycle> AudioFile::runs_to_cycles(QVector<Run> &runs) {
             }
             cycles.append(cycle);
         }
-        qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle_length << cycle.runs.count() << cycle_length;
+        //qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle_length << cycle.runs.count() << cycle_length;
     }
     qDebug() << "Cycle count: " << cycles.size();
     return cycles;
@@ -184,7 +186,7 @@ QVector<ToneObject> AudioFile::find_tones(QVector<Cycle> &cycles) {
     for (int i = 1; i < cycles.size(); i++) {
         if (cycles[i].semitone_id != tone.semitone_id || cycles[i].duty != tone.duty) {
             tone.length = cycles[i].start - tone_start;
-            qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
+            //qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
             tones.append(tone);
             tone_start = cycles[i].start;
             tone = ToneObject { cycles[i].semitone_id, cycles[i].duty };
@@ -192,13 +194,13 @@ QVector<ToneObject> AudioFile::find_tones(QVector<Cycle> &cycles) {
         tone.cycles.append(cycles[i]);
     }
     tone.length = cycle_length(cycles.last());
-    qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
+    //qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
     tones.append(tone);
     qDebug() << "Tone count: " << tones.size() << endl;
     return tones;
 }
 
-void AudioFile::fix_tones(QVector<ToneObject> &tones) {
+void AudioFile::fix_transitional_tones(QVector<ToneObject> &tones) {
     double a, b, c;
     double midpoint;
     samplesize left_size;
@@ -218,10 +220,11 @@ void AudioFile::fix_tones(QVector<ToneObject> &tones) {
         } else if (a > b && b > c) {
             midpoint = (b - c) / (a - c);
         } else {
-            qDebug() << "This shouldn't happen.";
+            i += 1;
+            continue;
         }
         left_size = cycle_length(tones[i-1].cycles.last()) * midpoint;
-        qDebug() << "Dividing tone" << i << "into" << left_size << "and" << tones[i].length - left_size;
+        //qDebug() << "Dividing tone" << i << "into" << left_size << "and" << tones[i].length - left_size;
         left.semitone_id = tones[i-1].semitone_id;
         left.duty = tones[i-1].duty;
         left.length = left_size;
@@ -235,6 +238,62 @@ void AudioFile::fix_tones(QVector<ToneObject> &tones) {
         i += 1;
         tones.insert(i, right);
         i += 1;
+    }
+}
+
+void AudioFile::fix_trailing_tones(QVector<ToneObject> &tones) {
+    ToneObject left, right;
+    for (int i = 1; i < tones.size(); ) {
+        if (tones[i-1].duty >= 4 || tones[i].duty < 4) {
+            // Skip tones with standard duty cycles
+            // and skip tones with nonstandard neighbors.
+            i += 1;
+            continue;
+        }
+        samplesize left_size = tones[i-1].match_after(tones[i]);
+        left.semitone_id = tones[i-1].semitone_id;
+        left.duty = tones[i-1].duty;
+        left.length = left_size;
+        right.semitone_id = -999;
+        right.duty = CycleDuty::None;
+        right.length = tones[i].length - left_size;
+        tones.removeAt(i);
+        if (left.length) {
+            tones.insert(i, left);
+            i += 1;
+        }
+        if (right.length) {
+            tones.insert(i, right);
+            i += 1;
+        }
+    }
+}
+
+void AudioFile::fix_leading_tones(QVector<ToneObject> &tones) {
+    ToneObject left, right;
+    for (int i = 0; (i+1) < tones.size(); ) {
+        if (tones[i].duty != CycleDuty::Irregular || tones[i+1].duty >= 4) {
+            // Skip tones with standard duty cycles
+            // and skip tones with nonstandard neighbors.
+            i += 1;
+            continue;
+        }
+        samplesize right_size = tones[i+1].match_before(tones[i]);
+        left.semitone_id = tones[i+1].semitone_id;
+        left.duty = CycleDuty::Irregular;
+        left.length = tones[i].length - right_size;
+        right.semitone_id = tones[i+1].semitone_id;
+        right.duty = CycleDuty::Irregular;
+        right.length = right_size;
+        tones.removeAt(i);
+        if (left.length) {
+            tones.insert(i, left);
+            i += 1;
+        }
+        if (right.length) {
+            tones.insert(i, right);
+            i += 1;
+        }
     }
 }
 

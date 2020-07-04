@@ -39,7 +39,7 @@ QVariant ChannelModel::data(const QModelIndex &index, int role) const
             return QVariant(tone.duty);
         break;
         case LengthRole:
-            return QVariant(tone.length);
+            return QVariant((qint64)tone.length);
         break;
         case NameRole:
             return QVariant(tone.name());
