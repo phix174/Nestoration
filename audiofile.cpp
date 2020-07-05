@@ -10,11 +10,13 @@
 #include "audiofile.h"
 #include "channelmodel.h"
 #include "toneobject.h"
+#include "player.h"
 
 
 AudioFile::AudioFile(QObject *parent)
     : QObject(parent), lowest_tone(8), highest_tone(8+88)
 {
+    this->player = new Player;
 }
 
 void AudioFile::open(const char *file_name)
@@ -45,6 +47,7 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 
 void AudioFile::openClicked()
 {
+    player->stop();
     QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a gzipped 5-channel WAV file", QString(), "gzipped WAV (*.wav.gz)");
     if (file_name == "") {
         return;
@@ -69,6 +72,7 @@ void AudioFile::openClicked()
     this->determine_range(tones);
     emit this->lowestToneChanged(this->lowest_tone);
     emit this->highestToneChanged(this->highest_tone);
+    player->start();
 }
 
 double period_to_semitone(const samplesize &period) {

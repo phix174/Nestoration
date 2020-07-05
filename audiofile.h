@@ -31,6 +31,8 @@ struct WAVheader {
 
 class ChannelModel;
 
+class Player;
+
 class AudioFile : public QObject
 {
     Q_OBJECT
@@ -65,6 +67,7 @@ private:
     ChannelModel *channel0;
     int lowest_tone;
     int highest_tone;
+    Player *player;
 };
 
 /*

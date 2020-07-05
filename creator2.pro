@@ -1,5 +1,6 @@
 QT += quick
 QT += widgets
+QT += multimedia
 
 CONFIG += c++11
 
@@ -17,7 +18,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         audiofile.cpp \
         channelmodel.cpp \
+        generator.cpp \
         main.cpp \
+        player.cpp \
         toneobject.cpp
 
 RESOURCES += qml.qrc
@@ -36,6 +39,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     audiofile.h \
     channelmodel.h \
+    generator.h \
+    player.h \
     toneobject.h
 
 unix: LIBS += -larchive
