@@ -26,6 +26,13 @@ ApplicationWindow {
                     toneviewer.reset()
                 }
             }
+            Button {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Seek 0"
+                onClicked: {
+                    seekZero()
+                }
+            }
         }
     }
     ToneViewer {

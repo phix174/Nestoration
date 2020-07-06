@@ -13,6 +13,7 @@ public:
     explicit Player(QObject *parent = nullptr);
 
     void start();
+    void seek(qint64 pos);
     void stop();
 
 public slots:

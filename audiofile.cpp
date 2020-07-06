@@ -72,7 +72,11 @@ void AudioFile::openClicked()
     this->determine_range(tones);
     emit this->lowestToneChanged(this->lowest_tone);
     emit this->highestToneChanged(this->highest_tone);
-    player->start();
+    this->player->start();
+}
+
+void AudioFile::seekZero() {
+    this->player->seek(0);
 }
 
 double period_to_semitone(const samplesize &period) {

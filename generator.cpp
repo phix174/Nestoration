@@ -10,6 +10,7 @@ Generator::Generator()
 qint64 Generator::readData(char *data, qint64 maxSize) {
     Q_UNUSED(maxSize);
     //qDebug() << maxSize; // This was always 16384
+    qDebug() << this->pos();
     int half = 8192;
     size_t duty = half / 64;
     int cycles = half / duty;

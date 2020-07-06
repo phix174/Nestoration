@@ -22,6 +22,10 @@ void Player::start() {
     qDebug() << "Buffer size:" << this->audio->bufferSize();
 }
 
+void Player::seek(qint64 pos) {
+    this->generator->seek(pos);
+}
+
 void Player::stop() {
     this->audio->stop();
 }
