@@ -6,12 +6,15 @@
 
 #include "generator.h"
 
+class Run;
+
 class Player : public QObject
 {
     Q_OBJECT
 public:
     explicit Player(QObject *parent = nullptr);
 
+    void setRuns(QVector<Run> &runs);
     void start();
     void seek(qint64 pos);
     void stop();

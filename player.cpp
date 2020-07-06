@@ -2,6 +2,8 @@
 #include <QAudioOutput>
 #include <QDebug>
 
+#include "toneobject.h"
+
 Player::Player(QObject *parent) : QObject(parent) {
     QAudioFormat format;
     format.setSampleRate(44100);
@@ -13,7 +15,12 @@ Player::Player(QObject *parent) : QObject(parent) {
     QObject::connect(this->audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
     this->generator = new Generator;
     this->generator->open(QIODevice::ReadOnly);
-    this->start();
+}
+
+void Player::setRuns(QVector<Run> &runs) {
+    this->generator->runs = runs;
+    this->generator->run_i = 0;
+    this->generator->run_i_sample = 0;
 }
 
 void Player::start() {

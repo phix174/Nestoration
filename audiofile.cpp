@@ -72,6 +72,7 @@ void AudioFile::openClicked()
     this->determine_range(tones);
     emit this->lowestToneChanged(this->lowest_tone);
     emit this->highestToneChanged(this->highest_tone);
+    this->player->setRuns(runs);
     this->player->start();
 }
 
