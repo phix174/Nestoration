@@ -12,8 +12,9 @@ class Generator : public QIODevice
 public:
     Generator();
 
-    QByteArray render_runs(qint64 maxSize);
-    QByteArray resample_bad(const QByteArray orig);
+    qint64 render_runs(QByteArray *buffer, qint64 maxSize);
+    void convert_buffer(const QByteArray in, float out[]);
+    size_t resample_soxr(float in[], float out[], size_t size);
 
     bool seek(qint64 pos) override;
     qint64 readData(char *data, qint64 maxlen) override;

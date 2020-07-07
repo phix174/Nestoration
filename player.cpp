@@ -8,9 +8,9 @@ Player::Player(QObject *parent) : QObject(parent) {
     QAudioFormat format;
     format.setSampleRate(44100);
     format.setChannelCount(1);
-    format.setSampleSize(8);
+    format.setSampleSize(32);
     format.setCodec("audio/pcm");
-    format.setSampleType(QAudioFormat::UnSignedInt);
+    format.setSampleType(QAudioFormat::Float);
     this->audio = new QAudioOutput(format);
     QObject::connect(this->audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
     this->generator = new Generator;
@@ -24,7 +24,6 @@ void Player::setRuns(QVector<Run> &runs) {
 }
 
 void Player::start() {
-    this->audio->setBufferSize(882*4);
     this->audio->start(this->generator);
     qDebug() << "Buffer size:" << this->audio->bufferSize();
 }

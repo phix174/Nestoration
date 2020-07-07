@@ -15,6 +15,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += /home/don/storage/tmp/libsoxr-testing/soxr-0.1.3-Source/src
+
 SOURCES += \
         audiofile.cpp \
         channelmodel.cpp \
@@ -44,3 +46,5 @@ HEADERS += \
     toneobject.h
 
 unix: LIBS += -larchive
+
+LIBS += -L/home/don/storage/tmp/libsoxr-testing/soxr-0.1.3-Source/Release/src -lsoxr
