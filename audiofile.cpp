@@ -1,6 +1,3 @@
-#include <iostream>
-#include <algorithm>
-
 #include <QFileDialog>
 #include <QDebug>
 
@@ -29,7 +26,7 @@ void AudioFile::open(const char *file_name)
     archive_read_support_format_raw(m_archive);
     result = archive_read_open_filename(m_archive, file_name, 1048576);
     if (result != ARCHIVE_OK) {
-        std::cout << archive_error_string(m_archive) << std::endl;
+        qDebug() << archive_error_string(m_archive);
         throw 1;
     }
     if (archive_read_next_header(m_archive, &entry) == ARCHIVE_OK) {
@@ -55,14 +52,14 @@ void AudioFile::openClicked()
     try {
         this->open(qPrintable(file_name));
     } catch (int e) {
-        qDebug() << "Failed to open WAV file." << endl;
+        qDebug() << "Failed to open WAV file.";
         return;
     }
-    qDebug() << "Reading runs..." << endl;
+    qDebug() << "Reading runs...";
     QVector<Run> runs = this->read_runs();
-    qDebug() << "Converting runs to cycles..." << endl;
+    qDebug() << "Converting runs to cycles...";
     QVector<Cycle> cycles = this->runs_to_cycles(runs);
-    qDebug() << "Finding tones..." << endl;
+    qDebug() << "Finding tones...";
     QVector<ToneObject> tones { this->find_tones(cycles) };
     fix_transitional_tones(tones);
     fix_trailing_tones(tones);
@@ -124,7 +121,7 @@ QVector<Run> AudioFile::read_runs() {
     //qDebug() << run.start << run.length << run.on;
     delete[] block;
     this->close();
-    qDebug() << "Run count: " << runs.size() << endl;
+    qDebug() << "Run count: " << runs.size();
     return runs;
 }
 
@@ -208,7 +205,7 @@ QVector<ToneObject> AudioFile::find_tones(QVector<Cycle> &cycles) {
     tone.length = cycle_length(cycles.last());
     //qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
     tones.append(tone);
-    qDebug() << "Tone count: " << tones.size() << endl;
+    qDebug() << "Tone count: " << tones.size();
     return tones;
 }
 

@@ -2,8 +2,6 @@
 #define AUDIOFILE_H
 
 #include <QObject>
-#include <QVector>
-#include <iosfwd>
 #include <cmath>
 
 #include "toneobject.h"
