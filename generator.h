@@ -4,7 +4,14 @@
 #include <QIODevice>
 #include <QVector>
 
-class Run;
+struct Run;
+
+struct Channel {
+    QList<Run> runs;
+    qint64 runs_i;
+    qint64 runs_i_sample;
+    uint8_t *buffer;
+};
 
 class Generator : public QIODevice
 {
@@ -12,18 +19,17 @@ class Generator : public QIODevice
 public:
     Generator();
 
-    qint64 render_runs(QByteArray *buffer, qint64 maxSize);
-    void convert_buffer(const QByteArray in, float out[]);
-    size_t resample_soxr(float in[], float out[], size_t size);
+    void setChannels(QList<Run> (&channel_runs)[5]);
+    qint64 render_runs(Channel &channel, qint64 maxSize);
+    void mix_channels(qint64 size);
+    size_t resample_soxr(float out[], size_t size);
 
     bool seek(qint64 pos) override;
     qint64 readData(char *data, qint64 maxlen) override;
     qint64 writeData(const char *data, qint64 len) override;
 
-    QVector<Run> runs;
-
-    qint64 run_i;
-    qint64 run_i_sample;
+    Channel channels[5];
+    float *mixed_buffer;
 };
 
 #endif // GENERATOR_H

@@ -10,37 +10,64 @@ extern "C" {
 
 Generator::Generator()
 {
-
+    for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
+        this->channels[channel_i] = { QList<Run> {}, 0, 0, nullptr };
+    }
 }
 
-qint64 Generator::render_runs(QByteArray *buffer, qint64 maxSize) {
+void Generator::setChannels(QList<Run> (&channel_runs)[5]) {
+    for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
+        this->channels[channel_i].runs = channel_runs[channel_i];
+        this->channels[channel_i].runs_i = 0;
+        this->channels[channel_i].runs_i_sample = 0;
+        delete[] this->channels[channel_i].buffer;
+    }
+}
+
+qint64 Generator::render_runs(Channel &channel, qint64 maxSize) {
     qint64 rendered_samples = 0;
     qint64 scaled_maxSize = maxSize * 1789773.0 / 44100.0;
-    while (this->run_i < this->runs.size() && rendered_samples < scaled_maxSize) {
-        Run run = this->runs.at(this->run_i);
-        qint64 remaining_run_samples = run.length - this->run_i_sample;
+    if (channel.buffer == nullptr) {
+        channel.buffer = new uint8_t[scaled_maxSize];
+    }
+    while (channel.runs_i < channel.runs.size() && rendered_samples < scaled_maxSize) {
+        Run run = channel.runs.at(channel.runs_i);
+        qint64 remaining_run_samples = run.length - channel.runs_i_sample;
         qint64 capped_samples = remaining_run_samples;
         if (rendered_samples + remaining_run_samples > scaled_maxSize) {
             capped_samples = scaled_maxSize - rendered_samples;
         }
-        this->run_i_sample += capped_samples;
+        channel.runs_i_sample += capped_samples;
+        memset(channel.buffer+rendered_samples, run.value, capped_samples);
         rendered_samples += capped_samples;
-        buffer->append(capped_samples, run.on ? 127 : 0);
-        if (this->run_i_sample >= run.length) {
-            this->run_i += 1;
-            this->run_i_sample = 0;
+        if (channel.runs_i_sample >= run.length) {
+            channel.runs_i += 1;
+            channel.runs_i_sample = 0;
         }
     }
     return rendered_samples;
 }
 
-void Generator::convert_buffer(const QByteArray in, float out[]) {
-    for (int i=0; i < in.size(); i++) {
-        out[i] = static_cast<float>(in.at(i) / 127.0);
+void Generator::mix_channels(qint64 size) {
+    for (qint64 sample_i = 0; sample_i < size; sample_i += 1) {
+        float pulse_out = 0;
+        uint8_t pulse_sum = channels[0].buffer[sample_i] + channels[1].buffer[sample_i];
+        if (pulse_sum > 0) {
+            pulse_out = 95.88 / (8128.0 / pulse_sum + 100.0);
+        }
+        float tnd_out = 0;
+        uint8_t tnd_sum = channels[2].buffer[sample_i] + channels[3].buffer[sample_i] + channels[4].buffer[sample_i];
+        if (tnd_sum > 0) {
+            tnd_out = 159.79 / (1 / (
+                channels[2].buffer[sample_i] / 8227.0 +
+                channels[3].buffer[sample_i] / 12241.0 +
+                channels[4].buffer[sample_i] / 22638.0) + 100);
+        }
+        this->mixed_buffer[sample_i] = pulse_out + tnd_out;
     }
 }
 
-size_t Generator::resample_soxr(float in[], float out[], size_t in_size) {
+size_t Generator::resample_soxr(float out[], size_t in_size) {
     size_t out_size = (size_t)(in_size * 44100.0 / 1789773.0 + 0.5);
     size_t idone, odone;
     const soxr_datatype_t itype = static_cast<soxr_datatype_t>(0);
@@ -52,7 +79,7 @@ size_t Generator::resample_soxr(float in[], float out[], size_t in_size) {
     const int use_threads = 1;
     soxr_runtime_spec_t runtime_spec = soxr_runtime_spec(use_threads);
     soxr_error_t error = soxr_oneshot(1789773, 44100, 1,
-        in, in_size, &idone,
+        this->mixed_buffer, in_size, &idone,
         out, out_size, &odone,
         &io_spec, &quality_spec, &runtime_spec);
     if (error) {
@@ -63,35 +90,40 @@ size_t Generator::resample_soxr(float in[], float out[], size_t in_size) {
 
 bool Generator::seek(qint64 pos) {
     QIODevice::seek(pos);
-    qint64 running_total = 0;
-    qint64 i = 0;
-    for(Run &run: this->runs) {
-        if (running_total + run.length >= pos) {
-            break;
+    for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
+        qint64 running_total = 0;
+        qint64 i = 0;
+        for(Run &run: this->channels[channel_i].runs) {
+            if (running_total + run.length >= pos) {
+                break;
+            }
+            running_total += run.length;
+            i += 1;
         }
-        running_total += run.length;
-        i += 1;
+        if (running_total < pos) {
+            // Tried to seek past end of data.
+            // TODO: I think this test is wrong.
+            return false;
+        }
+        this->channels[channel_i].runs_i = i;
+        this->channels[channel_i].runs_i_sample = pos - running_total;
     }
-    if (running_total < pos) {
-        // Tried to seek past end of data.
-        return false;
-    }
-    this->run_i = i;
-    this->run_i_sample = pos - running_total;
     return true;
 }
 
 qint64 Generator::readData(char *data, qint64 maxSize) {
-    qDebug() << "run_i" << this->run_i << "run_i_sample" << this->run_i_sample;
-    QByteArray buffer;
-    qint64 actual_size = this->render_runs(&buffer, maxSize/ sizeof(float));
-    float *buffer2 = new float[actual_size];
-    this->convert_buffer(buffer, buffer2);
-    float *buffer3 = new float[(size_t)(actual_size * 44100.0 / 1789773.0 + 0.5)];
-    size_t bytes = sizeof(float) * this->resample_soxr(buffer2, buffer3, actual_size);
-    memcpy(data, buffer3, bytes);
-    delete[] buffer2;
-    delete[] buffer3;
+    qint64 actual_size = 0;
+    for (Channel &channel: this->channels) {
+        actual_size = this->render_runs(channel, maxSize / sizeof(float));
+        // TODO: Should probably check to make sure all the actual sizes are the same.
+    }
+    this->mixed_buffer = new float[actual_size];
+    this->mix_channels(actual_size);
+    float *downsampled_buffer = new float[(size_t)(actual_size * 44100.0 / 1789773.0 + 0.5)];
+    size_t bytes = sizeof(float) * this->resample_soxr(downsampled_buffer, actual_size);
+    memcpy(data, downsampled_buffer, bytes);
+    delete[] mixed_buffer;
+    delete[] downsampled_buffer;
     return bytes;
 }
 

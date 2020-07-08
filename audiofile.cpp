@@ -13,6 +13,7 @@
 AudioFile::AudioFile(QObject *parent)
     : QObject(parent), lowest_tone(8), highest_tone(8+88)
 {
+    this->channel0 = new ChannelModel;
     this->player = new Player;
 }
 
@@ -56,20 +57,23 @@ void AudioFile::openClicked()
         return;
     }
     qDebug() << "Reading runs...";
-    QVector<Run> runs = this->read_runs();
+    this->read_runs();
+    /*
+    QVector<BoolRun> bool_runs = this->read_bool_runs();
     qDebug() << "Converting runs to cycles...";
-    QVector<Cycle> cycles = this->runs_to_cycles(runs);
+    QVector<Cycle> cycles = this->bool_runs_to_cycles(bool_runs);
     qDebug() << "Finding tones...";
     QVector<ToneObject> tones { this->find_tones(cycles) };
     fix_transitional_tones(tones);
     fix_trailing_tones(tones);
     fix_leading_tones(tones);
-    this->channel0 = new ChannelModel { tones };
+    this->channel0->set_tones(tones);
     emit this->channel0Changed(this->channel0);
     this->determine_range(tones);
     emit this->lowestToneChanged(this->lowest_tone);
     emit this->highestToneChanged(this->highest_tone);
-    this->player->setRuns(runs);
+    */
+    this->player->setChannels(this->channel_runs);
     this->player->start();
 }
 
@@ -82,9 +86,56 @@ double period_to_semitone(const samplesize &period) {
     return log(frequency / C0) / log(TWELFTH_ROOT);
 }
 
-QVector<Run> AudioFile::read_runs() {
-    QVector<Run> runs;
-    Run run;
+void AudioFile::read_runs() {
+    const uint8_t CHANNELS = 5;
+    Run run[CHANNELS];
+    uint8_t *block = new uint8_t[1789773 * 5];
+    std::streamsize bytes_read = 0;
+    sampleoff file_sample_i = 0;
+    std::streamoff block_offset = 0;
+    uint8_t previous_value[CHANNELS];
+    uint8_t new_value[CHANNELS];
+
+    this->read_block(reinterpret_cast<char*>(block), bytes_read);
+    if (bytes_read == 0) {
+        return;
+    }
+    for (int channel_i = 0; channel_i < CHANNELS; channel_i += 1) {
+        new_value[channel_i] = block[block_offset + channel_i];
+        run[channel_i] = { file_sample_i, 0, static_cast<uint8_t>((new_value[channel_i] - 128) >> 3) };
+        previous_value[channel_i] = new_value[channel_i];
+    }
+    file_sample_i += 1;
+    block_offset += 5;
+    while (bytes_read) {
+        while (block_offset < bytes_read) {
+            for (int channel_i = 0; channel_i < CHANNELS; channel_i += 1) {
+                new_value[channel_i] = block[block_offset + channel_i];
+                if (new_value[channel_i] != previous_value[channel_i]) {
+                    run[channel_i].length = file_sample_i - run[channel_i].start;
+                    this->channel_runs[channel_i].append(run[channel_i]);
+                    run[channel_i] = { file_sample_i, 0, static_cast<uint8_t>((new_value[channel_i] - 128) >> 3) };
+                    previous_value[channel_i] = new_value[channel_i];
+                }
+            }
+            file_sample_i += 1;
+            block_offset += 5;
+        }
+        block_offset = 0;
+        this->read_block(reinterpret_cast<char*>(block), bytes_read);
+    }
+    for (int channel_i = 0; channel_i < CHANNELS; channel_i += 1) {
+        run[channel_i].length = file_sample_i - run[channel_i].start;
+        this->channel_runs[channel_i].append(run[channel_i]);
+        qDebug() << "Channel" << channel_i << "run count:" << this->channel_runs[channel_i].size();
+    }
+    delete[] block;
+    this->close();
+}
+
+QVector<BoolRun> AudioFile::read_bool_runs() {
+    QVector<BoolRun> bool_runs;
+    BoolRun run;
     char *block = new char[1789773 * 5];
     std::streamsize bytes_read = 0;
     sampleoff file_sample_i = 0;
@@ -94,7 +145,7 @@ QVector<Run> AudioFile::read_runs() {
 
     this->read_block(block, bytes_read);
     if (bytes_read == 0) {
-        return runs;
+        return bool_runs;
     }
     new_value = block[block_i] != -128;
     run = { file_sample_i, 0, new_value };
@@ -106,7 +157,7 @@ QVector<Run> AudioFile::read_runs() {
             new_value = block[block_i] != -128;
             if (new_value != previous_value) {
                 run.length = file_sample_i - run.start;
-                runs.append(run);
+                bool_runs.append(run);
                 run = { file_sample_i, 0, new_value };
             }
             previous_value = new_value;
@@ -117,53 +168,53 @@ QVector<Run> AudioFile::read_runs() {
         this->read_block(block, bytes_read);
     }
     run.length = file_sample_i - run.start;
-    runs.append(run);
+    bool_runs.append(run);
     //qDebug() << run.start << run.length << run.on;
     delete[] block;
     this->close();
-    qDebug() << "Run count: " << runs.size();
-    return runs;
+    qDebug() << "Run count: " << bool_runs.size();
+    return bool_runs;
 }
 
-QVector<Cycle> AudioFile::runs_to_cycles(QVector<Run> &runs) {
+QVector<Cycle> AudioFile::bool_runs_to_cycles(QVector<BoolRun> &bool_runs) {
     QVector<Cycle> cycles;
     const Cycle clear_cycle = { 0, CycleDuty::Irregular, -999, {} };
     Cycle cycle;
     samplesize cycle_length;
     bool is_normal_size;
-    for (int i=0; i+1 < runs.size(); i += 1) {
+    for (int i=0; i+1 < bool_runs.size(); i += 1) {
         cycle = clear_cycle;
-        cycle.start = runs[i].start;
-        if (runs[i].on) {
-            cycle_length = runs[i].length + runs[i+1].length;
+        cycle.start = bool_runs[i].start;
+        if (bool_runs[i].on) {
+            cycle_length = bool_runs[i].length + bool_runs[i+1].length;
             is_normal_size = (144 <= cycle_length && cycle_length <= 32768 && (cycle_length & 15) == 0);
             if (is_normal_size) {
-                cycle.runs = { runs[i].length, runs[i+1].length };
-                if (runs[i].length * 7 == runs[i+1].length) {
+                cycle.runs = { bool_runs[i].length, bool_runs[i+1].length };
+                if (bool_runs[i].length * 7 == bool_runs[i+1].length) {
                     cycle.duty = CycleDuty::Eighth;
-                } else if (runs[i].length * 3 == runs[i+1].length) {
+                } else if (bool_runs[i].length * 3 == bool_runs[i+1].length) {
                     cycle.duty = CycleDuty::Quarter;
-                } else if (runs[i].length == runs[i+1].length) {
+                } else if (bool_runs[i].length == bool_runs[i+1].length) {
                     cycle.duty = CycleDuty::Half;
-                } else if (runs[i].length == runs[i+1].length * 3) {
+                } else if (bool_runs[i].length == bool_runs[i+1].length * 3) {
                     cycle.duty = CycleDuty::ThreeQuarters;
                 }
                 cycle.semitone_id = period_to_semitone(cycle_length);
                 i += 1;
             } else if (cycle_length <= 32768) {
-                cycle.runs = { runs[i].length, runs[i+1].length };
+                cycle.runs = { bool_runs[i].length, bool_runs[i+1].length };
                 cycle.semitone_id = period_to_semitone(cycle_length);
                 i += 1;
             } else {
-                cycle_length = runs[i].length;
-                cycle.runs = { runs[i].length };
+                cycle_length = bool_runs[i].length;
+                cycle.runs = { bool_runs[i].length };
                 cycle.duty = CycleDuty::Irregular;
             }
             cycles.append(cycle);
         } else {
-            cycle_length = runs[i].length;
-            cycle.runs = { runs[i].length };
-            if (runs[i].length > 28672) {
+            cycle_length = bool_runs[i].length;
+            cycle.runs = { bool_runs[i].length };
+            if (bool_runs[i].length > 28672) {
                 cycle.duty = CycleDuty::None;
             }
             cycles.append(cycle);

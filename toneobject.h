@@ -20,6 +20,12 @@ enum CycleDuty {
 struct Run {
     sampleoff start;
     samplesize length;
+    uint8_t value;
+};
+
+struct BoolRun {
+    sampleoff start;
+    samplesize length;
     bool on;
 };
 

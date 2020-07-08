@@ -17,10 +17,8 @@ Player::Player(QObject *parent) : QObject(parent) {
     this->generator->open(QIODevice::ReadOnly);
 }
 
-void Player::setRuns(QVector<Run> &runs) {
-    this->generator->runs = runs;
-    this->generator->run_i = 0;
-    this->generator->run_i_sample = 0;
+void Player::setChannels(QList<Run> (&channel_runs)[5]) {
+    this->generator->setChannels(channel_runs);
 }
 
 void Player::start() {
@@ -37,5 +35,5 @@ void Player::stop() {
 }
 
 void Player::handleStateChanged(QAudio::State new_state) {
-    qDebug() << new_state;
+    qDebug() << "QAudioOutput state changed to:" << new_state;
 }

@@ -11,6 +11,10 @@ ChannelModel::ChannelModel(const QVector<ToneObject> tones, QObject *parent)
 {
 }
 
+void ChannelModel::set_tones(QVector<ToneObject> tones) {
+    this->tones = tones;
+}
+
 int ChannelModel::rowCount(const QModelIndex &parent) const
 {
     // For list models only the root node (an invalid parent) should return the list's size. For all

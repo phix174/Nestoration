@@ -44,8 +44,9 @@ public:
     void open(const char *file_name);
     void read_block(char block[], std::streamsize &bytes_read);
     void close();
-    QVector<Run> read_runs();
-    QVector<Cycle> runs_to_cycles(QVector<Run> &runs);
+    void read_runs();
+    QVector<BoolRun> read_bool_runs();
+    QVector<Cycle> bool_runs_to_cycles(QVector<BoolRun> &runs);
     QVector<ToneObject> find_tones(QVector<Cycle> &cycles);
     void fix_transitional_tones(QVector<ToneObject> &tones);
     void fix_trailing_tones(QVector<ToneObject> &tones);
@@ -64,6 +65,7 @@ signals:
 private:
     struct archive *m_archive;
     ChannelModel *channel0;
+    QList<Run> channel_runs[5];
     int lowest_tone;
     int highest_tone;
     Player *player;

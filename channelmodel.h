@@ -13,6 +13,8 @@ public:
     explicit ChannelModel(QObject *parent = nullptr);
     explicit ChannelModel(const QVector<ToneObject> tones, QObject *parent = nullptr);
 
+    void set_tones(QVector<ToneObject> tones);
+
     enum ModelRoles {
         SemiToneIdRole = Qt::UserRole +1,
         DutyRole,

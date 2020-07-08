@@ -6,7 +6,7 @@
 
 #include "generator.h"
 
-class Run;
+struct Run;
 
 class Player : public QObject
 {
@@ -14,7 +14,7 @@ class Player : public QObject
 public:
     explicit Player(QObject *parent = nullptr);
 
-    void setRuns(QVector<Run> &runs);
+    void setChannels(QList<Run> (&channel_runs)[5]);
     void start();
     void seek(qint64 pos);
     void stop();
