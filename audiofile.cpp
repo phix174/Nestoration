@@ -102,7 +102,11 @@ void AudioFile::read_runs() {
     }
     for (int channel_i = 0; channel_i < CHANNELS; channel_i += 1) {
         new_value[channel_i] = block[block_offset + channel_i];
-        run[channel_i] = { file_sample_i, 0, static_cast<uint8_t>((new_value[channel_i] - 128) >> 3) };
+        uint8_t raw_value = new_value[channel_i] - 128;
+        if (channel_i < 4) {
+            raw_value = raw_value >> 3;
+        }
+        run[channel_i] = { file_sample_i, 0, raw_value};
         previous_value[channel_i] = new_value[channel_i];
     }
     file_sample_i += 1;
@@ -114,7 +118,11 @@ void AudioFile::read_runs() {
                 if (new_value[channel_i] != previous_value[channel_i]) {
                     run[channel_i].length = file_sample_i - run[channel_i].start;
                     this->channel_runs[channel_i].append(run[channel_i]);
-                    run[channel_i] = { file_sample_i, 0, static_cast<uint8_t>((new_value[channel_i] - 128) >> 3) };
+                    uint8_t raw_value = new_value[channel_i] - 128;
+                    if (channel_i < 4) {
+                        raw_value = raw_value >> 3;
+                    }
+                    run[channel_i] = { file_sample_i, 0, raw_value};
                     previous_value[channel_i] = new_value[channel_i];
                 }
             }
