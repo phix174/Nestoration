@@ -33,8 +33,16 @@ struct Cycle {
     sampleoff start;
     CycleDuty duty;
     double semitone_id;
-    QVector<samplesize> runs;
+    QList<Run> runs;
 };
+
+inline samplesize sum_run_lengths(Cycle &cycle) {
+    samplesize runs_total = 0;
+    for (Run &run: cycle.runs) {
+        runs_total += run.length;
+    }
+    return runs_total;
+}
 
 class ToneObject {
 

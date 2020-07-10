@@ -45,8 +45,7 @@ public:
     void read_block(char block[], std::streamsize &bytes_read);
     void close();
     void read_runs();
-    QVector<BoolRun> read_bool_runs();
-    QVector<Cycle> bool_runs_to_cycles(QVector<BoolRun> &runs);
+    QVector<Cycle> runs_to_cycles(QList<Run> &runs);
     QVector<ToneObject> find_tones(QVector<Cycle> &cycles);
     void fix_transitional_tones(QVector<ToneObject> &tones);
     void fix_trailing_tones(QVector<ToneObject> &tones);
@@ -63,6 +62,7 @@ signals:
     void highestToneChanged(int highest_tone);
 
 private:
+    bool is_open = false;
     struct archive *m_archive;
     ChannelModel *channel0;
     QList<Run> channel_runs[5];
