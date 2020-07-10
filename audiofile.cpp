@@ -101,6 +101,7 @@ void AudioFile::read_runs() {
         return;
     }
     for (int channel_i = 0; channel_i < CHANNELS; channel_i += 1) {
+        this->channel_runs[channel_i].clear();
         new_value[channel_i] = block[block_offset + channel_i];
         uint8_t raw_value = new_value[channel_i] - 128;
         if (channel_i < 4) {

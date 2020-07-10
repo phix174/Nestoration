@@ -13,6 +13,16 @@ Generator::Generator()
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
         this->channels[channel_i] = { QList<Run> {}, 0, 0, nullptr };
     }
+    this->init_soxr();
+}
+
+Generator::~Generator() {
+    delete[] downsampled_buffer;
+    delete[] mixed_buffer;
+    soxr_delete(this->soxr);
+}
+
+void Generator::init_soxr() {
     const soxr_datatype_t itype = static_cast<soxr_datatype_t>(0);
     const soxr_datatype_t otype = static_cast<soxr_datatype_t>(0);
     const soxr_io_spec_t io_spec = soxr_io_spec(itype, otype);
@@ -25,19 +35,15 @@ Generator::Generator()
     this->soxr = soxr_create(1789773, 44100, 1, &error, &io_spec, &quality_spec, &runtime_spec);
 }
 
-Generator::~Generator() {
-    delete[] downsampled_buffer;
-    delete[] mixed_buffer;
-    soxr_delete(this->soxr);
-}
-
 void Generator::setChannels(QList<Run> (&channel_runs)[5]) {
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
         this->channels[channel_i].runs = channel_runs[channel_i];
         this->channels[channel_i].runs_i = 0;
         this->channels[channel_i].runs_i_sample = 0;
         delete[] this->channels[channel_i].buffer;
+        this->channels[channel_i].buffer = nullptr;
     }
+    soxr_clear(this->soxr);
 }
 
 qint64 Generator::render_runs(Channel &channel, qint64 maxSize) {

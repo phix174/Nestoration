@@ -21,6 +21,7 @@ public:
     Generator();
     ~Generator();
 
+    void init_soxr();
     void setChannels(QList<Run> (&channel_runs)[5]);
     qint64 render_runs(Channel &channel, qint64 maxSize);
     void mix_channels(qint64 size);
@@ -33,7 +34,7 @@ public:
     Channel channels[5];
     float *mixed_buffer = nullptr;
     float *downsampled_buffer = nullptr;
-    soxr_t soxr;
+    soxr_t soxr = nullptr;
 };
 
 #endif // GENERATOR_H

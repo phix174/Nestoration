@@ -18,6 +18,7 @@ Player::Player(QObject *parent) : QObject(parent) {
 }
 
 void Player::setChannels(QList<Run> (&channel_runs)[5]) {
+    this->audio->reset();
     this->generator->setChannels(channel_runs);
 }
 
