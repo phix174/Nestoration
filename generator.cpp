@@ -26,6 +26,8 @@ Generator::Generator()
 }
 
 Generator::~Generator() {
+    delete[] downsampled_buffer;
+    delete[] mixed_buffer;
     soxr_delete(this->soxr);
 }
 
@@ -122,13 +124,15 @@ qint64 Generator::readData(char *data, qint64 maxSize) {
         actual_size = this->render_runs(channel, maxSize / sizeof(float));
         // TODO: Should probably check to make sure all the actual sizes are the same.
     }
-    this->mixed_buffer = new float[actual_size];
+    if (this->mixed_buffer == nullptr) {
+        this->mixed_buffer = new float[actual_size];
+    }
     this->mix_channels(actual_size);
-    float *downsampled_buffer = new float[(size_t)(actual_size * 44100.0 / 1789773.0 + 0.5)];
+    if (this->downsampled_buffer == nullptr) {
+        this->downsampled_buffer = new float[(size_t)(actual_size * 44100.0 / 1789773.0 + 0.5)];
+    }
     size_t bytes = sizeof(float) * this->resample_soxr(downsampled_buffer, actual_size);
     memcpy(data, downsampled_buffer, bytes);
-    delete[] mixed_buffer;
-    delete[] downsampled_buffer;
     return bytes;
 }
 

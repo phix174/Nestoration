@@ -31,7 +31,8 @@ public:
     qint64 writeData(const char *data, qint64 len) override;
 
     Channel channels[5];
-    float *mixed_buffer;
+    float *mixed_buffer = nullptr;
+    float *downsampled_buffer = nullptr;
     soxr_t soxr;
 };
 
