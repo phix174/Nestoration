@@ -13,6 +13,20 @@ Generator::Generator()
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
         this->channels[channel_i] = { QList<Run> {}, 0, 0, nullptr };
     }
+    const soxr_datatype_t itype = static_cast<soxr_datatype_t>(0);
+    const soxr_datatype_t otype = static_cast<soxr_datatype_t>(0);
+    const soxr_io_spec_t io_spec = soxr_io_spec(itype, otype);
+    const unsigned long q_recipe = SOXR_MQ;
+    const unsigned long q_flags = 0;
+    const soxr_quality_spec_t quality_spec = soxr_quality_spec(q_recipe, q_flags);
+    const int use_threads = 1;
+    const soxr_runtime_spec_t runtime_spec = soxr_runtime_spec(use_threads);
+    soxr_error_t error;
+    this->soxr = soxr_create(1789773, 44100, 1, &error, &io_spec, &quality_spec, &runtime_spec);
+}
+
+Generator::~Generator() {
+    soxr_delete(this->soxr);
 }
 
 void Generator::setChannels(QList<Run> (&channel_runs)[5]) {
@@ -70,18 +84,9 @@ void Generator::mix_channels(qint64 size) {
 size_t Generator::resample_soxr(float out[], size_t in_size) {
     size_t out_size = (size_t)(in_size * 44100.0 / 1789773.0 + 0.5);
     size_t idone, odone;
-    const soxr_datatype_t itype = static_cast<soxr_datatype_t>(0);
-    const soxr_datatype_t otype = static_cast<soxr_datatype_t>(0);
-    soxr_io_spec_t io_spec = soxr_io_spec(itype, otype);
-    const unsigned long q_recipe = SOXR_MQ;
-    const unsigned long q_flags = 0;
-    soxr_quality_spec_t quality_spec = soxr_quality_spec(q_recipe, q_flags);
-    const int use_threads = 1;
-    soxr_runtime_spec_t runtime_spec = soxr_runtime_spec(use_threads);
-    soxr_error_t error = soxr_oneshot(1789773, 44100, 1,
+    soxr_error_t error = soxr_process(this->soxr,
         this->mixed_buffer, in_size, &idone,
-        out, out_size, &odone,
-        &io_spec, &quality_spec, &runtime_spec);
+        out, out_size, &odone);
     if (error) {
         qDebug() << soxr_strerror(error);
     }

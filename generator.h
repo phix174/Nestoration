@@ -3,6 +3,7 @@
 
 #include <QIODevice>
 #include <QVector>
+#include "soxr.h"
 
 struct Run;
 
@@ -18,6 +19,7 @@ class Generator : public QIODevice
 
 public:
     Generator();
+    ~Generator();
 
     void setChannels(QList<Run> (&channel_runs)[5]);
     qint64 render_runs(Channel &channel, qint64 maxSize);
@@ -30,6 +32,7 @@ public:
 
     Channel channels[5];
     float *mixed_buffer;
+    soxr_t soxr;
 };
 
 #endif // GENERATOR_H
