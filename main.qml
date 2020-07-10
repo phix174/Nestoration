@@ -43,6 +43,8 @@ ApplicationWindow {
         color: "#444444";
         Column {
             anchors.fill: parent;
+            spacing: 16
+
             ToneViewer {
                 id: toneviewer0
                 property variant mainrepeater_model: channel0

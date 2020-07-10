@@ -8,11 +8,13 @@ Item {
     property int tone_count: highestTone - lowestTone
     function reset() {
         scroller.ScrollBar.horizontal.position = 0;
-        itemsScale.xScale = Qt.binding(function() { return root.width / mainrow.width });
+        itemsScale.xScale = Qt.binding(function() { return scroller.width / mainrow.width });
     }
 
     Row {
         anchors.fill: parent;
+        spacing: 1
+
         Column {
             width: 32
             height: noteHeight * tone_count
@@ -36,7 +38,7 @@ Item {
             }
         }
         Item {
-            width: parent.width - 32
+            width: parent.width - 32 - parent.spacing
             height: noteHeight * tone_count
             Column {
                 width: parent.width
@@ -57,6 +59,7 @@ Item {
             ScrollView {
                 id: scroller
                 anchors.fill: parent;
+                implicitWidth: parent.width;
                 clip: true
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
                 ScrollBar.vertical.policy: ScrollBar.AlwaysOn
@@ -65,17 +68,17 @@ Item {
 
                 MouseArea {
                     height: parent.height
-                    width: Math.max(mainrow.width, root.width)
+                    width: Math.max(mainrow.width, scroller.width)
                     onWheel: {
                         var position_old = scroller.ScrollBar.horizontal.position;
                         var scale_factor = 1.2;
                         if (wheel.angleDelta.y < 0) {
-                            if (itemsScale.xScale / scale_factor > root.width / mainrow.width) {
+                            if (itemsScale.xScale / scale_factor > scroller.width / mainrow.width) {
                                 // If zooming out wouldn't zoom out too far, go ahead and do it.
                                 scale_factor = 1 / scale_factor;
                             } else {
                                 // Otherwise, only zoom out as much as needed to fit the whole file.
-                                scale_factor = (root.width / mainrow.width) / itemsScale.xScale
+                                scale_factor = (scroller.width / mainrow.width) / itemsScale.xScale
                             }
                         } else if (itemsScale.xScale * scale_factor > 1) {
                             // If zooming in would zoom in too far, only zoom in to 1:1.
@@ -96,7 +99,7 @@ Item {
                     height: tone_count * noteHeight
                     transform: Scale {
                         id: itemsScale
-                        xScale: root.width / mainrow.width
+                        xScale: scroller.width / mainrow.width
                     }
                     Repeater {
                         model: mainrepeater_model
