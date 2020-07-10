@@ -14,6 +14,7 @@ AudioFile::AudioFile(QObject *parent)
     : QObject(parent), lowest_tone(8), highest_tone(8+88)
 {
     this->channel0 = new ChannelModel;
+    this->channel1 = new ChannelModel;
     this->player = new Player;
 }
 
@@ -69,12 +70,20 @@ void AudioFile::openClicked()
         fix_transitional_tones(tones);
         fix_trailing_tones(tones);
         fix_leading_tones(tones);
-        this->channel0->set_tones(tones);
-        emit this->channel0Changed(this->channel0);
-        this->determine_range(tones);
-        emit this->lowestToneChanged(this->lowest_tone);
-        emit this->highestToneChanged(this->highest_tone);
-        break;
+        if (channel_i == 0) {
+            this->channel0->set_tones(tones);
+            emit this->channel0Changed(this->channel0);
+            this->determine_range(tones);
+            emit this->lowestToneChanged(this->lowest_tone);
+            emit this->highestToneChanged(this->highest_tone);
+        } else if (channel_i == 1) {
+            this->channel1->set_tones(tones);
+            emit this->channel1Changed(this->channel1);
+            //this->determine_range(tones);
+            //emit this->lowestToneChanged(this->lowest_tone);
+            //emit this->highestToneChanged(this->highest_tone);
+            break;
+        }
     }
     this->player->setChannels(this->channel_runs);
     this->player->start();

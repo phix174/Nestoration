@@ -7,7 +7,8 @@ ApplicationWindow {
     width: 1920
     height: 1080
     title: qsTr("Scroll")
-    property int noteHeight: 17
+    property int noteHeight: 4
+    property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
 
     Rectangle {
         id: tools
@@ -22,8 +23,8 @@ ApplicationWindow {
                 text: "Open..."
                 onClicked: {
                     openClicked()
-                    toneviewer.mainrepeater_model = channel0
-                    toneviewer.reset()
+                    toneviewer0.reset()
+                    toneviewer1.reset()
                 }
             }
             Button {
@@ -35,9 +36,21 @@ ApplicationWindow {
             }
         }
     }
-    ToneViewer {
-        id: toneviewer
+    Rectangle {
         y: tools.height
-        property variant mainrepeater_model
+        width: parent.width
+        height: parent.height - y;
+        color: "#444444";
+        Column {
+            anchors.fill: parent;
+            ToneViewer {
+                id: toneviewer0
+                property variant mainrepeater_model: channel0
+            }
+            ToneViewer {
+                id: toneviewer1
+                property variant mainrepeater_model: channel1
+            }
+        }
     }
 }
