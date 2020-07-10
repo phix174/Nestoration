@@ -72,25 +72,30 @@ Item {
                     onWheel: {
                         var position_old = scroller.ScrollBar.horizontal.position;
                         var scale_factor = 1.2;
+                        var bound_again = false;
                         if (wheel.angleDelta.y < 0) {
                             if (itemsScale.xScale / scale_factor > scroller.width / mainrow.width) {
                                 // If zooming out wouldn't zoom out too far, go ahead and do it.
                                 scale_factor = 1 / scale_factor;
                             } else {
                                 // Otherwise, only zoom out as much as needed to fit the whole file.
-                                scale_factor = (scroller.width / mainrow.width) / itemsScale.xScale
+                                scale_factor = (scroller.width / mainrow.width) / itemsScale.xScale;
+                                toneViewer.reset();
+                                bound_again = true;
                             }
                         } else if (itemsScale.xScale * scale_factor > 1) {
                             // If zooming in would zoom in too far, only zoom in to 1:1.
                             scale_factor = 1 / itemsScale.xScale;
                         }
-                        var mouse_x = wheel.x / (mainrow.width * itemsScale.xScale);
-                        var position_new = Math.max(0, position_old + (mouse_x - position_old) * (1 - 1 / scale_factor));
-                        itemsScale.xScale *= scale_factor;
-                        if (position_new + scroller.ScrollBar.horizontal.size > 1) {
-                            position_new = Math.max(0, 1 - scroller.ScrollBar.horizontal.size);
+                        if (!bound_again) {
+                            var mouse_x = wheel.x / (mainrow.width * itemsScale.xScale);
+                            var position_new = Math.max(0, position_old + (mouse_x - position_old) * (1 - 1 / scale_factor));
+                            itemsScale.xScale *= scale_factor;
+                            if (position_new + scroller.ScrollBar.horizontal.size > 1) {
+                                position_new = Math.max(0, 1 - scroller.ScrollBar.horizontal.size);
+                            }
+                            scroller.ScrollBar.horizontal.position = position_new;
                         }
-                        scroller.ScrollBar.horizontal.position = position_new;
                     }
                 }
 
