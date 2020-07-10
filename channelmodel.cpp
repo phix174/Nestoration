@@ -12,7 +12,9 @@ ChannelModel::ChannelModel(const QVector<ToneObject> tones, QObject *parent)
 }
 
 void ChannelModel::set_tones(QVector<ToneObject> tones) {
+    this->beginResetModel();
     this->tones = tones;
+    this->endResetModel();
 }
 
 int ChannelModel::rowCount(const QModelIndex &parent) const
