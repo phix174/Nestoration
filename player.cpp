@@ -5,15 +5,18 @@
 #include "toneobject.h"
 
 Player::Player(QObject *parent) : QObject(parent) {
+    QAudioDeviceInfo device = QAudioDeviceInfo::defaultOutputDevice();
     QAudioFormat format;
-    format.setSampleRate(44100);
+    format.setSampleRate(1789773);
     format.setChannelCount(1);
     format.setSampleSize(32);
     format.setCodec("audio/pcm");
     format.setSampleType(QAudioFormat::Float);
-    this->audio = new QAudioOutput(format);
+    QAudioFormat nearest = device.nearestFormat(format);
+    qDebug() << device.deviceName() << "Nearest sample rate:" << nearest.sampleRate();
+    this->audio = new QAudioOutput(nearest);
     QObject::connect(this->audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
-    this->generator = new Generator;
+    this->generator = new Generator { nearest.sampleRate() };
     this->generator->open(QIODevice::ReadOnly);
 }
 

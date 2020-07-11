@@ -8,7 +8,8 @@ extern "C" {
     #include "soxr.h"
 }
 
-Generator::Generator()
+Generator::Generator(const int output_rate)
+    : output_rate(output_rate)
 {
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
         this->channels[channel_i] = { QList<Run> {}, 0, 0, nullptr };
@@ -32,7 +33,7 @@ void Generator::init_soxr() {
     const int use_threads = 1;
     const soxr_runtime_spec_t runtime_spec = soxr_runtime_spec(use_threads);
     soxr_error_t error;
-    this->soxr = soxr_create(1789773, 44100, 1, &error, &io_spec, &quality_spec, &runtime_spec);
+    this->soxr = soxr_create(1789773, this->output_rate, 1, &error, &io_spec, &quality_spec, &runtime_spec);
 }
 
 void Generator::setChannels(QList<Run> (&channel_runs)[5]) {
@@ -48,7 +49,7 @@ void Generator::setChannels(QList<Run> (&channel_runs)[5]) {
 
 qint64 Generator::render_runs(Channel &channel, qint64 maxSize) {
     qint64 rendered_samples = 0;
-    qint64 scaled_maxSize = maxSize * 1789773.0 / 44100.0;
+    qint64 scaled_maxSize = maxSize * 1789773.0 / this->output_rate;
     if (channel.buffer == nullptr) {
         channel.buffer = new uint8_t[scaled_maxSize];
     }
@@ -90,7 +91,7 @@ void Generator::mix_channels(qint64 size) {
 }
 
 size_t Generator::resample_soxr(float out[], size_t in_size) {
-    size_t out_size = (size_t)(in_size * 44100.0 / 1789773.0 + 0.5);
+    size_t out_size = (size_t)(in_size * this->output_rate / 1789773.0 + 0.5);
     size_t idone, odone;
     soxr_error_t error = soxr_process(this->soxr,
         this->mixed_buffer, in_size, &idone,
@@ -135,7 +136,7 @@ qint64 Generator::readData(char *data, qint64 maxSize) {
     }
     this->mix_channels(actual_size);
     if (this->downsampled_buffer == nullptr) {
-        this->downsampled_buffer = new float[(size_t)(actual_size * 44100.0 / 1789773.0 + 0.5)];
+        this->downsampled_buffer = new float[(size_t)(actual_size * this->output_rate / 1789773.0 + 0.5)];
     }
     size_t bytes = sizeof(float) * this->resample_soxr(downsampled_buffer, actual_size);
     memcpy(data, downsampled_buffer, bytes);

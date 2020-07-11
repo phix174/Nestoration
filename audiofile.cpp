@@ -200,7 +200,7 @@ QVector<Cycle> AudioFile::runs_to_cycles(QList<Run> &runs) {
             }
         }
         cycles.append(cycle);
-        qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle.runs.count() << sum_run_lengths(cycle);
+        //qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle.runs.count() << sum_run_lengths(cycle);
     }
     qDebug() << "Cycle count: " << cycles.size();
     return cycles;

@@ -18,7 +18,7 @@ class Generator : public QIODevice
 {
 
 public:
-    Generator();
+    Generator(const int output_rate);
     ~Generator();
 
     void init_soxr();
@@ -31,6 +31,7 @@ public:
     qint64 readData(char *data, qint64 maxlen) override;
     qint64 writeData(const char *data, qint64 len) override;
 
+    int output_rate;
     Channel channels[5];
     float *mixed_buffer = nullptr;
     float *downsampled_buffer = nullptr;
