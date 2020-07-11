@@ -56,6 +56,7 @@ public:
 public slots:
     void openClicked();
     void seekZero();
+    void playPause();
 
 signals:
     void channel0Changed(ChannelModel *channel0);

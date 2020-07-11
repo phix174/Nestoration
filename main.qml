@@ -18,6 +18,8 @@ ApplicationWindow {
 
         Row {
             anchors.fill: parent
+            spacing: 8
+
             Button {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Open..."
@@ -32,6 +34,14 @@ ApplicationWindow {
                 text: "Seek 0"
                 onClicked: {
                     seekZero()
+                }
+            }
+
+            Button {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Play/Pause"
+                onClicked: {
+                    playPause()
                 }
             }
         }

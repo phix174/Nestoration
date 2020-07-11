@@ -17,6 +17,7 @@ public:
     void setChannels(QList<Run> (&channel_runs)[5]);
     void start();
     void seek(qint64 pos);
+    void play_pause();
     void stop();
 
 public slots:

@@ -34,6 +34,21 @@ void Player::seek(qint64 pos) {
     this->generator->seek(pos);
 }
 
+void Player::play_pause() {
+    bool playing = this->audio->state() == QAudio::ActiveState;
+    bool paused = this->audio->state() == QAudio::SuspendedState;
+    if (playing) {
+        qDebug() << "Suspending";
+        this->audio->suspend();
+    } else if (paused) {
+        qDebug() << "Resuming";
+        this->audio->resume();
+    } else {
+        qDebug() << "Starting";
+        this->audio->start(this->generator);
+    }
+}
+
 void Player::stop() {
     this->audio->stop();
 }

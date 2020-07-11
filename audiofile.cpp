@@ -86,11 +86,14 @@ void AudioFile::openClicked()
         }
     }
     this->player->setChannels(this->channel_runs);
-    this->player->start();
 }
 
 void AudioFile::seekZero() {
     this->player->seek(0);
+}
+
+void AudioFile::playPause() {
+    this->player->play_pause();
 }
 
 double period_to_semitone(const samplesize &period) {
