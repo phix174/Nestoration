@@ -68,9 +68,9 @@ samplesize ToneObject::match_after(ToneObject &after, samplesize max_length) {
     if (this->cycles.isEmpty() or after.cycles.isEmpty()) {
         return 0;
     }
-    ref_i = this->cycles.first().runs.begin();
-    cand_i = after.cycles.last().runs.begin();
-    for (int i=0; i < 2; i += 1) {
+    ref_i = this->cycles.last().runs.begin();
+    cand_i = after.cycles.first().runs.begin();
+    while (ref_i != this->cycles.last().runs.end() && cand_i != after.cycles.first().runs.end()) {
         samplesize reference = ref_i->length;
         samplesize candidate = cand_i->length;
         samplesize new_matched = 0;
