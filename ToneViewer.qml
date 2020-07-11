@@ -79,7 +79,6 @@ Item {
                                 scale_factor = 1 / scale_factor;
                             } else {
                                 // Otherwise, only zoom out as much as needed to fit the whole file.
-                                scale_factor = (scroller.width / mainrow.width) / itemsScale.xScale;
                                 toneViewer.reset();
                                 bound_again = true;
                             }
