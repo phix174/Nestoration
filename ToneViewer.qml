@@ -5,7 +5,9 @@ Item {
     id: toneViewer
     width: parent.width;
     height: noteHeight * tone_count
-    property int tone_count: highestTone - lowestTone
+    property int extra_tones: 3
+    property int tone_count: highestTone - lowestTone + 2 * extra_tones
+    property int paddedHighestTone: highestTone + extra_tones
     function reset() {
         scroller.ScrollBar.horizontal.position = 0;
         itemsScale.xScale = Qt.binding(function() { return scroller.width / mainrow.width });
@@ -23,8 +25,8 @@ Item {
             Repeater {
                 model: tone_count
                 delegate: Rectangle {
-                    property int pitch_class: (highestTone - index) % 12
-                    property int octave: Math.floor((highestTone - index) / 12)
+                    property int pitch_class: (paddedHighestTone - index) % 12
+                    property int octave: Math.floor((paddedHighestTone - index) / 12)
                     height: noteHeight - noteSpacing
                     width: parent.width
                     color: { if ([1, 3, 6, 8, 10].includes(pitch_class)) { return "#555555" } else { return "#666666" } }
@@ -48,8 +50,8 @@ Item {
                 Repeater {
                     model: tone_count
                     delegate: Rectangle {
-                        property int pitch_class: (highestTone - index) % 12
-                        property int octave: Math.floor((highestTone - index) / 12)
+                        property int pitch_class: (paddedHighestTone - index) % 12
+                        property int octave: Math.floor((paddedHighestTone - index) / 12)
                         height: noteHeight - noteSpacing
                         width: parent.width
                         color: { if ([1, 3, 6, 8, 10].includes(pitch_class)) { return "#555555" } else { return "#666666" } }
@@ -108,8 +110,8 @@ Item {
                     Repeater {
                         model: mainrepeater_model
                         delegate: Rectangle {
-                            y: if (model.semitone_id > -999) {
-                                   (highestTone - model.semitone_id) * noteHeight
+                            y: if (lowestTone <= model.semitone_id && model.semitone_id <= highestTone) {
+                                   (paddedHighestTone - model.semitone_id) * noteHeight
                                } else {
                                    0
                                }

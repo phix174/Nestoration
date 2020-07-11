@@ -64,6 +64,8 @@ void AudioFile::openClicked()
     qDebug() << "Reading runs...";
     this->read_runs();
     qDebug() << "Converting runs to cycles...";
+    this->highest_tone = -999;
+    this->lowest_tone = 999;
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
         QVector<Cycle> cycles = this->runs_to_cycles(this->channel_runs[channel_i]);
         QVector<ToneObject> tones { this->find_tones(cycles) };
@@ -74,17 +76,15 @@ void AudioFile::openClicked()
             this->channel0->set_tones(tones);
             emit this->channel0Changed(this->channel0);
             this->determine_range(tones);
-            emit this->lowestToneChanged(this->lowest_tone);
-            emit this->highestToneChanged(this->highest_tone);
         } else if (channel_i == 1) {
             this->channel1->set_tones(tones);
             emit this->channel1Changed(this->channel1);
-            //this->determine_range(tones);
-            //emit this->lowestToneChanged(this->lowest_tone);
-            //emit this->highestToneChanged(this->highest_tone);
+            this->determine_range(tones);
             break;
         }
     }
+    emit this->lowestToneChanged(this->lowest_tone);
+    emit this->highestToneChanged(this->highest_tone);
     this->player->setChannels(this->channel_runs);
 }
 
@@ -339,20 +339,17 @@ void AudioFile::fix_leading_tones(QVector<ToneObject> &tones) {
 }
 
 void AudioFile::determine_range(QVector<ToneObject> &tones) {
-    ToneObject *tone;
-    int max_semitone = -999;
-    int min_semitone = 999;
-    for (int i = 0; i < tones.size(); i++) {
-        tone = &tones[i];
-        if (ceil(tone->semitone_id) > max_semitone) {
-            max_semitone = ceil(tone->semitone_id);
+    for (ToneObject &tone: tones) {
+        if (tone.duty == CycleDuty::Irregular || tone.semitone_id < 0) {
+            continue;
         }
-        if (floor(tone->semitone_id) < min_semitone && floor(tone->semitone_id) >= 0) {
-            min_semitone = floor(tone->semitone_id);
+        if (ceil(tone.semitone_id) > this->highest_tone) {
+            this->highest_tone = ceil(tone.semitone_id);
+        }
+        if (floor(tone.semitone_id) < this->lowest_tone) {
+            this->lowest_tone = floor(tone.semitone_id);
         }
     }
-    this->highest_tone = max_semitone;
-    this->lowest_tone = min_semitone;
 }
 
 void AudioFile::close() {
