@@ -131,8 +131,11 @@ Item {
                                        "#22000000"
                                    } else if (model.duty === 5) {
                                        "#cc0000"
+                                   } else if (model.duty === 6) {
+                                       "#ff9900"
                                    }
-                            z: if (model.duty === 5) { 1 } else { 0 }
+
+                            z: if (model.duty === 5 || model.duty === 6) { 1 } else { 0 }
                             Rectangle {
                                 width: 1 / itemsScale.xScale
                                 height: parent.height

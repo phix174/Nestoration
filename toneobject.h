@@ -14,7 +14,8 @@ enum CycleDuty {
     Half,
     ThreeQuarters,
     None,
-    Irregular
+    Irregular,
+    Fixed
 };
 
 struct Run {
