@@ -31,9 +31,10 @@ Item {
                     width: parent.width
                     color: { if ([1, 3, 6, 8, 10].includes(pitch_class)) { return "#555555" } else { return "#666666" } }
                     Text {
+                        anchors.centerIn: parent
                         text: ["C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"][pitch_class] + octave
                         font.family: "monospace"
-                        font.pointSize: 10
+                        font.pointSize: 6
                         color: "#aaaaaa"
                     }
                 }
@@ -97,6 +98,10 @@ Item {
                             }
                             scroller.ScrollBar.horizontal.position = position_new;
                         }
+                    }
+                    onClicked: {
+                        var mouse_x = mouse.x / itemsScale.xScale;
+                        playerSeek(mouse_x);
                     }
                 }
 

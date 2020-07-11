@@ -7,7 +7,7 @@ ApplicationWindow {
     width: 1920
     height: 1080
     title: qsTr("Scroll")
-    property int noteHeight: 4
+    property int noteHeight: 9
     property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
 
     Rectangle {
@@ -33,7 +33,7 @@ ApplicationWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Seek 0"
                 onClicked: {
-                    seekZero()
+                    playerSeek(0)
                 }
             }
 

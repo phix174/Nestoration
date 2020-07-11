@@ -55,7 +55,7 @@ public:
 
 public slots:
     void openClicked();
-    void seekZero();
+    void playerSeek(qint64 position);
     void playPause();
 
 signals:

@@ -88,8 +88,8 @@ void AudioFile::openClicked()
     this->player->setChannels(this->channel_runs);
 }
 
-void AudioFile::seekZero() {
-    this->player->seek(0);
+void AudioFile::playerSeek(qint64 position) {
+    this->player->seek(position);
 }
 
 void AudioFile::playPause() {

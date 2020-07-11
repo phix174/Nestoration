@@ -114,11 +114,6 @@ bool Generator::seek(qint64 pos) {
             running_total += run.length;
             i += 1;
         }
-        if (running_total < pos) {
-            // Tried to seek past end of data.
-            // TODO: I think this test is wrong.
-            return false;
-        }
         this->channels[channel_i].runs_i = i;
         this->channels[channel_i].runs_i_sample = pos - running_total;
     }
