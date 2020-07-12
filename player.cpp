@@ -4,7 +4,7 @@
 
 #include "toneobject.h"
 
-Player::Player(QObject *parent) : QObject(parent) {
+Player::Player(AudioFile &audio_file, QObject *parent) : QObject(parent) {
     QAudioDeviceInfo device = QAudioDeviceInfo::defaultOutputDevice();
     QAudioFormat format;
     format.setSampleRate(1789773);
@@ -16,7 +16,7 @@ Player::Player(QObject *parent) : QObject(parent) {
     qDebug() << device.deviceName() << "Nearest sample rate:" << nearest.sampleRate();
     this->audio = new QAudioOutput(nearest);
     QObject::connect(this->audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
-    this->generator = new Generator { nearest.sampleRate() };
+    this->generator = new Generator { audio_file, nearest.sampleRate() };
     this->generator->open(QIODevice::ReadOnly);
 }
 
@@ -30,8 +30,8 @@ void Player::start() {
     qDebug() << "Buffer size:" << this->audio->bufferSize();
 }
 
-void Player::seek(qint64 pos) {
-    this->generator->seek(pos);
+void Player::seek(qint64 sample_position) {
+    this->generator->seek_sample(sample_position);
 }
 
 void Player::play_pause() {
@@ -45,7 +45,7 @@ void Player::play_pause() {
         this->audio->resume();
     } else {
         qDebug() << "Starting";
-        this->audio->start(this->generator);
+        this->start();
     }
 }
 

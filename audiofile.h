@@ -38,6 +38,7 @@ class AudioFile : public QObject
     Q_PROPERTY(ChannelModel *channel1 MEMBER channel1 NOTIFY channel1Changed)
     Q_PROPERTY(int lowestTone MEMBER lowest_tone NOTIFY lowestToneChanged)
     Q_PROPERTY(int highestTone MEMBER highest_tone NOTIFY highestToneChanged)
+    Q_PROPERTY(qint64 playerPosition MEMBER player_position NOTIFY playerPositionChanged)
 
 public:
     explicit AudioFile(QObject *parent = 0);
@@ -52,10 +53,11 @@ public:
     void fix_trailing_tones(QVector<ToneObject> &tones);
     void fix_leading_tones(QVector<ToneObject> &tones);
     void determine_range(QVector<ToneObject> &tones);
+    void setPosition(qint64 position);
 
 public slots:
     void openClicked();
-    void playerSeek(qint64 position);
+    void playerSeek(qint64 sample_position);
     void playPause();
 
 signals:
@@ -63,6 +65,7 @@ signals:
     void channel1Changed(ChannelModel *channel1);
     void lowestToneChanged(int lowest_tone);
     void highestToneChanged(int highest_tone);
+    void playerPositionChanged(qint64 player_position);
 
 private:
     bool is_open = false;
@@ -72,6 +75,7 @@ private:
     QList<Run> channel_runs[5];
     int lowest_tone;
     int highest_tone;
+    qint64 player_position;
     Player *player;
 };
 

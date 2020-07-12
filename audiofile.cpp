@@ -15,7 +15,7 @@ AudioFile::AudioFile(QObject *parent)
 {
     this->channel0 = new ChannelModel;
     this->channel1 = new ChannelModel;
-    this->player = new Player;
+    this->player = new Player { *this };
 }
 
 void AudioFile::open(const char *file_name)
@@ -86,10 +86,11 @@ void AudioFile::openClicked()
     emit this->lowestToneChanged(this->lowest_tone);
     emit this->highestToneChanged(this->highest_tone);
     this->player->setChannels(this->channel_runs);
+    this->playerSeek(0);
 }
 
-void AudioFile::playerSeek(qint64 position) {
-    this->player->seek(position);
+void AudioFile::playerSeek(qint64 sample_position) {
+    this->player->seek(sample_position);
 }
 
 void AudioFile::playPause() {
@@ -350,6 +351,11 @@ void AudioFile::determine_range(QVector<ToneObject> &tones) {
             this->lowest_tone = floor(tone.semitone_id);
         }
     }
+}
+
+void AudioFile::setPosition(qint64 position) {
+    this->player_position = position;
+    emit this->playerPositionChanged(position);
 }
 
 void AudioFile::close() {

@@ -12,11 +12,11 @@ class Player : public QObject
 {
     Q_OBJECT
 public:
-    explicit Player(QObject *parent = nullptr);
+    explicit Player(AudioFile &audio_file, QObject *parent = nullptr);
 
     void setChannels(QList<Run> (&channel_runs)[5]);
     void start();
-    void seek(qint64 pos);
+    void seek(qint64 sample_position);
     void play_pause();
     void stop();
 

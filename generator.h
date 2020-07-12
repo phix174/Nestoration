@@ -14,11 +14,13 @@ struct Channel {
     uint8_t *buffer;
 };
 
+class AudioFile;
+
 class Generator : public QIODevice
 {
 
 public:
-    Generator(const int output_rate);
+    Generator(AudioFile &audio_file, const int output_rate);
     ~Generator();
 
     void init_soxr();
@@ -27,10 +29,11 @@ public:
     void mix_channels(qint64 size);
     size_t resample_soxr(float out[], size_t size);
 
-    bool seek(qint64 pos) override;
+    bool seek_sample(qint64 sample_position);
     qint64 readData(char *data, qint64 maxlen) override;
     qint64 writeData(const char *data, qint64 len) override;
 
+    AudioFile *audio_file;
     int output_rate;
     Channel channels[5];
     float *mixed_buffer = nullptr;

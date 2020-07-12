@@ -24,6 +24,8 @@ ApplicationWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Open..."
                 onClicked: {
+                    toneviewer0.fudgeTimer.running = false
+                    toneviewer1.fudgeTimer.running = false
                     openClicked()
                     toneviewer0.reset()
                     toneviewer1.reset()
@@ -42,6 +44,8 @@ ApplicationWindow {
                 text: "Play/Pause"
                 onClicked: {
                     playPause()
+                    toneviewer0.fudgeTimer.running = !toneviewer0.fudgeTimer.running;
+                    toneviewer1.fudgeTimer.running = !toneviewer1.fudgeTimer.running;
                 }
             }
         }

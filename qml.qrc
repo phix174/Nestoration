@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>qtquickcontrols2.conf</file>
         <file>ToneViewer.qml</file>
+        <file>SquareTone.qml</file>
     </qresource>
 </RCC>

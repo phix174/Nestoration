@@ -8,6 +8,7 @@ Item {
     property int extra_tones: 3
     property int tone_count: highestTone - lowestTone + 2 * extra_tones
     property int paddedHighestTone: highestTone + extra_tones
+    property alias fudgeTimer: fudgeTimer
     function reset() {
         scroller.ScrollBar.horizontal.position = 0;
         itemsScale.xScale = Qt.binding(function() { return scroller.width / mainrow.width });
@@ -105,50 +106,40 @@ Item {
                     }
                 }
 
-                Row {
-                    id: mainrow
+                Item {
                     height: tone_count * noteHeight
+                    width: mainrow.width
                     transform: Scale {
                         id: itemsScale
                         xScale: scroller.width / mainrow.width
                     }
-                    Repeater {
-                        model: mainrepeater_model
-                        delegate: Rectangle {
-                            y: if (lowestTone <= model.semitone_id && model.semitone_id <= highestTone) {
-                                   (paddedHighestTone - model.semitone_id) * noteHeight
-                               } else {
-                                   0
-                               }
-                            width: model.length
-                            height: if (model.semitone_id > -999) {
-                                       noteHeight - noteSpacing;
-                                   } else {
-                                       mainrow.height;
-                                   }
-                            color: if (model.duty === 0) {
-                                       "#00cc00"
-                                   } else if (model.duty === 1) {
-                                       "#66cc00"
-                                   } else if (model.duty === 2) {
-                                       "#00cc66"
-                                   } else if (model.duty === 3) {
-                                       "#66cc66"
-                                   } else if (model.duty === 4) {
-                                       "#22000000"
-                                   } else if (model.duty === 5) {
-                                       "#cc0000"
-                                   } else if (model.duty === 6) {
-                                       "#ff9900"
-                                   }
 
-                            z: if (model.duty === 5 || model.duty === 6) { 1 } else { 0 }
-                            Rectangle {
-                                width: 1 / itemsScale.xScale
-                                height: parent.height
-                                color: parent.color
-                                visible: if (model.duty === 4) { false } else { true }
-                            }
+                    Rectangle {
+                        property real fudge: 0
+                        height: parent.height
+                        width: 1 / itemsScale.xScale
+                        x: playerPosition * (1789773.0 / 48000.0) / 4.0 - 152727.0 + fudge
+                        color: "yellow"
+                        visible: true
+                        readonly property int myPosition: playerPosition
+                        onMyPositionChanged: fudge = 0
+
+                        Timer {
+                            id: fudgeTimer
+                            repeat: true
+                            running: false
+                            interval: 1000.0 / 50.0
+                            onTriggered: parent.fudge += 1789773.0 / 50.0
+                        }
+                    }
+
+                    Row {
+                        id: mainrow
+                        height: parent.height
+
+                        Repeater {
+                            model: mainrepeater_model
+                            delegate: SquareTone {}
                         }
                     }
                 }

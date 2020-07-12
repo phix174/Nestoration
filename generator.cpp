@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <algorithm>
 
+#include "audiofile.h"
 #include "generator.h"
 #include "toneobject.h"
 
@@ -8,8 +9,8 @@ extern "C" {
     #include "soxr.h"
 }
 
-Generator::Generator(const int output_rate)
-    : output_rate(output_rate)
+Generator::Generator(AudioFile &audio_file, const int output_rate)
+    : audio_file(&audio_file), output_rate(output_rate)
 {
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
         this->channels[channel_i] = { QList<Run> {}, 0, 0, nullptr };
@@ -102,21 +103,24 @@ size_t Generator::resample_soxr(float out[], size_t in_size) {
     return odone;
 }
 
-bool Generator::seek(qint64 pos) {
-    QIODevice::seek(pos);
+bool Generator::seek_sample(qint64 sample_position) {
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
         qint64 running_total = 0;
         qint64 i = 0;
         for(Run &run: this->channels[channel_i].runs) {
-            if (running_total + run.length >= pos) {
+            if (running_total + run.length >= sample_position) {
                 break;
             }
             running_total += run.length;
             i += 1;
         }
         this->channels[channel_i].runs_i = i;
-        this->channels[channel_i].runs_i_sample = pos - running_total;
+        this->channels[channel_i].runs_i_sample = sample_position - running_total;
     }
+    double rate_ratio = this->output_rate / 1789773.0;
+    qint64 byte_position = sample_position * rate_ratio * sizeof(float);
+    this->seek(byte_position);
+    this->audio_file->setPosition(this->pos());
     return true;
 }
 
@@ -135,6 +139,7 @@ qint64 Generator::readData(char *data, qint64 maxSize) {
     }
     size_t bytes = sizeof(float) * this->resample_soxr(downsampled_buffer, actual_size);
     memcpy(data, downsampled_buffer, bytes);
+    this->audio_file->setPosition(this->pos());
     return bytes;
 }
 
