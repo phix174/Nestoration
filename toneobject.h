@@ -1,12 +1,19 @@
 #ifndef TONEOBJECT_H
 #define TONEOBJECT_H
 
+#include <cmath>
+
 #include <QStringList>
 #include <QVector>
 
 typedef uint8_t samplevalue;
 typedef long sampleoff;
 typedef long samplesize;
+
+const double CPU_FREQENCY = 1789773.0;
+const double TWELFTH_ROOT = pow(2.0, 1.0 / 12.0);
+const double A0 = 440.0 / pow(2, 4);
+const double C0 = A0 * pow(TWELFTH_ROOT, -9.0);
 
 enum CycleDuty {
     Eighth,
@@ -43,6 +50,11 @@ inline samplesize sum_run_lengths(Cycle &cycle) {
         runs_total += run.length;
     }
     return runs_total;
+}
+
+inline double period_to_semitone(const samplesize &period) {
+    double frequency = CPU_FREQENCY / period;
+    return log(frequency / C0) / log(TWELFTH_ROOT);
 }
 
 class ToneObject {

@@ -2,14 +2,9 @@
 #define AUDIOFILE_H
 
 #include <QObject>
-#include <cmath>
 
+#include "squarechannel.h"
 #include "toneobject.h"
-
-const double CPU_FREQENCY = 1789773.0;
-const double TWELFTH_ROOT = pow(2.0, 1.0 / 12.0);
-const double A0 = 440.0 / pow(2, 4);
-const double C0 = A0 * pow(TWELFTH_ROOT, -9.0);
 
 struct WAVheader {
     char RIFF_literal[4];
@@ -47,11 +42,6 @@ public:
     void read_block(char block[], std::streamsize &bytes_read);
     void close();
     void read_runs();
-    QVector<Cycle> runs_to_cycles(QList<Run> &runs);
-    QVector<ToneObject> find_tones(QVector<Cycle> &cycles);
-    void fix_transitional_tones(QVector<ToneObject> &tones);
-    void fix_trailing_tones(QVector<ToneObject> &tones);
-    void fix_leading_tones(QVector<ToneObject> &tones);
     void determine_range(QVector<ToneObject> &tones);
     void setPosition(qint64 position);
 
@@ -73,6 +63,7 @@ private:
     ChannelModel *channel0;
     ChannelModel *channel1;
     QList<Run> channel_runs[5];
+    SquareChannel square_channels[2];
     int lowest_tone;
     int highest_tone;
     qint64 player_position;
