@@ -4,6 +4,7 @@
 #include <QObject>
 
 #include "squarechannel.h"
+#include "trianglechannel.h"
 #include "toneobject.h"
 
 struct WAVheader {
@@ -31,6 +32,7 @@ class AudioFile : public QObject
     Q_OBJECT
     Q_PROPERTY(ChannelModel *channel0 MEMBER channel0 NOTIFY channel0Changed)
     Q_PROPERTY(ChannelModel *channel1 MEMBER channel1 NOTIFY channel1Changed)
+    Q_PROPERTY(ChannelModel *channel2 MEMBER channel2 NOTIFY channel2Changed)
     Q_PROPERTY(int lowestTone MEMBER lowest_tone NOTIFY lowestToneChanged)
     Q_PROPERTY(int highestTone MEMBER highest_tone NOTIFY highestToneChanged)
     Q_PROPERTY(qint64 playerPosition MEMBER player_position NOTIFY playerPositionChanged)
@@ -53,6 +55,7 @@ public slots:
 signals:
     void channel0Changed(ChannelModel *channel0);
     void channel1Changed(ChannelModel *channel1);
+    void channel2Changed(ChannelModel *channel2);
     void lowestToneChanged(int lowest_tone);
     void highestToneChanged(int highest_tone);
     void playerPositionChanged(qint64 player_position);
@@ -62,8 +65,10 @@ private:
     struct archive *m_archive;
     ChannelModel *channel0;
     ChannelModel *channel1;
+    ChannelModel *channel2;
     QList<Run> channel_runs[5];
     SquareChannel square_channels[2];
+    TriangleChannel triangle_channel;
     int lowest_tone;
     int highest_tone;
     qint64 player_position;

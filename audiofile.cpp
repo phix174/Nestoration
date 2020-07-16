@@ -15,6 +15,7 @@ AudioFile::AudioFile(QObject *parent)
 {
     this->channel0 = new ChannelModel;
     this->channel1 = new ChannelModel;
+    this->channel2 = new ChannelModel;
     this->player = new Player { *this };
 }
 
@@ -87,7 +88,11 @@ void AudioFile::openClicked()
                 }            }
             break;
             case 2:
-                //this->triangle_channel.runs_to_cycles(this->channel_runs[channel_i]);
+                QVector<Cycle> cycles = this->triangle_channel.runs_to_cycles(this->channel_runs[channel_i]);
+                QVector<ToneObject> tones { this->triangle_channel.find_tones(cycles) };
+                this->channel2->set_tones(tones);
+                emit this->channel2Changed(this->channel2);
+                this->determine_range(tones);
             break;
         }
     }
@@ -163,7 +168,7 @@ void AudioFile::read_runs() {
 
 void AudioFile::determine_range(QVector<ToneObject> &tones) {
     for (ToneObject &tone: tones) {
-        if (tone.duty == CycleDuty::Irregular || tone.semitone_id < 0) {
+        if (tone.shape == CycleShape::Irregular || tone.semitone_id < 0) {
             continue;
         }
         if (ceil(tone.semitone_id) > this->highest_tone) {

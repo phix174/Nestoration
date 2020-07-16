@@ -5,13 +5,13 @@
 ToneObject::ToneObject()
 {
     this->semitone_id = -999;
-    this->duty = 5;
+    this->shape = CycleShape::Irregular;
     this->length = 0;
     this->cycles = {};
 }
 
-ToneObject::ToneObject(const double &semitone_id, const short int &duty)
-    : semitone_id(semitone_id), duty(duty)
+ToneObject::ToneObject(const double &semitone_id, const short int &shape)
+    : semitone_id(semitone_id), shape(shape)
 {
     this->length = 0;
     this->cycles = {};

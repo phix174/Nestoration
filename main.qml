@@ -7,8 +7,24 @@ ApplicationWindow {
     width: 1920
     height: 1080
     title: qsTr("Scroll")
-    property int noteHeight: 9
+    property int noteHeight: 5
     property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
+    readonly property int sHAPE_NONE: 0
+    readonly property int sHAPE_SQUARE_EIGHTH: 1
+    readonly property int sHAPE_SQUARE_QUARTER: 2
+    readonly property int sHAPE_SQUARE_HALF: 3
+    readonly property int sHAPE_SQUARE_THREEQUARTERS: 4
+    readonly property int sHAPE_TRIANGLE: 5
+    readonly property int sHAPE_IRREGULAR: 6
+    readonly property int sHAPE_FIXED: 7
+    function shape_is_square(shape) {
+        return (
+            shape === sHAPE_SQUARE_EIGHTH ||
+            shape === sHAPE_SQUARE_QUARTER ||
+            shape === sHAPE_SQUARE_HALF ||
+            shape === sHAPE_SQUARE_THREEQUARTERS
+        )
+    }
 
     Rectangle {
         id: tools
@@ -29,6 +45,7 @@ ApplicationWindow {
                     openClicked()
                     toneviewer0.reset()
                     toneviewer1.reset()
+                    toneviewer2.reset()
                 }
             }
             Button {
@@ -66,6 +83,10 @@ ApplicationWindow {
             ToneViewer {
                 id: toneviewer1
                 property variant mainrepeater_model: channel1
+            }
+            ToneViewer {
+                id: toneviewer2
+                property variant mainrepeater_model: channel2
             }
         }
     }

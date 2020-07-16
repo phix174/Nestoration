@@ -17,7 +17,7 @@ public:
 
     enum ModelRoles {
         SemiToneIdRole = Qt::UserRole +1,
-        DutyRole,
+        ShapeRole,
         LengthRole,
         NameRole
     };

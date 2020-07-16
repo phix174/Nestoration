@@ -15,12 +15,13 @@ const double TWELFTH_ROOT = pow(2.0, 1.0 / 12.0);
 const double A0 = 440.0 / pow(2, 4);
 const double C0 = A0 * pow(TWELFTH_ROOT, -9.0);
 
-enum CycleDuty {
-    Eighth,
-    Quarter,
-    Half,
-    ThreeQuarters,
+enum CycleShape {
     None,
+    SquareEighth,
+    SquareQuarter,
+    SquareHalf,
+    SquareThreeQuarters,
+    Triangle,
     Irregular,
     Fixed
 };
@@ -39,7 +40,7 @@ struct BoolRun {
 
 struct Cycle {
     sampleoff start;
-    CycleDuty duty;
+    CycleShape shape;
     double semitone_id;
     QList<Run> runs;
 };
@@ -61,10 +62,10 @@ class ToneObject {
 
 public:
     explicit ToneObject();
-    explicit ToneObject(const double &semitone_id, const short int &duty);
+    explicit ToneObject(const double &semitone_id, const short int &shape);
 
     double semitone_id;
-    short int duty;
+    short int shape;
     samplesize length;
     QVector<Cycle> cycles;
 

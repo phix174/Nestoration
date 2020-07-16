@@ -12,27 +12,29 @@ Rectangle {
            } else {
                mainrow.height;
            }
-    color: if (model.duty === 0) {
-               "#00cc00"
-           } else if (model.duty === 1) {
-               "#66cc00"
-           } else if (model.duty === 2) {
-               "#00cc66"
-           } else if (model.duty === 3) {
-               "#66cc66"
-           } else if (model.duty === 4) {
+    color: if (model.shape === sHAPE_NONE) {
                "#22000000"
-           } else if (model.duty === 5) {
+           } else if (model.shape === sHAPE_SQUARE_EIGHTH) {
+               "#00cc00"
+           } else if (model.shape === sHAPE_SQUARE_QUARTER) {
+               "#66cc00"
+           } else if (model.shape === sHAPE_SQUARE_HALF) {
+               "#00cc66"
+           } else if (model.shape === sHAPE_SQUARE_THREEQUARTERS) {
+               "#66cc66"
+           } else if (model.shape === sHAPE_TRIANGLE) {
+               "#00cc00"
+           } else if (model.shape === sHAPE_IRREGULAR) {
                "#cc0000"
-           } else if (model.duty === 6) {
+           } else if (model.shape === sHAPE_FIXED) {
                "#ff9900"
            }
 
-    z: if (model.duty === 5 || model.duty === 6) { 1 } else { 0 }
+    z: if (model.shape === sHAPE_IRREGULAR || model.shape === sHAPE_FIXED) { 1 } else { 0 }
     Rectangle {
         width: 1 / itemsScale.xScale
         height: parent.height
         color: parent.color
-        visible: if (model.duty === 4) { false } else { true }
+        visible: if (model.shape === sHAPE_NONE) { false } else { true }
     }
 }

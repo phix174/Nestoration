@@ -11,7 +11,7 @@ SquareChannel::SquareChannel()
 QVector<Cycle> SquareChannel::runs_to_cycles(QList<Run> &runs) {
     const samplesize SEVEN_EIGHTHS_OFF = 28672; // 32768 * 7/8
     QVector<Cycle> cycles;
-    const Cycle clear_cycle = { 0, CycleDuty::Irregular, -999, {} };
+    const Cycle clear_cycle = { 0, CycleShape::Irregular, -999, {} };
     for (int i=0; i < runs.size(); i += 1) {
         Cycle cycle = clear_cycle;
         cycle.start = runs[i].start;
@@ -30,13 +30,13 @@ QVector<Cycle> SquareChannel::runs_to_cycles(QList<Run> &runs) {
                  bool is_normal_size = (144 <= cycle_length && cycle_length <= 32768 && (cycle_length & 15) == 0);
                  if (is_normal_size) {
                      if (on_length * 8 == cycle_length) {
-                         cycle.duty = CycleDuty::Eighth;
+                         cycle.shape = CycleShape::SquareEighth;
                      } else if (on_length * 4 == cycle_length) {
-                         cycle.duty = CycleDuty::Quarter;
+                         cycle.shape = CycleShape::SquareQuarter;
                      } else if (on_length * 2 == cycle_length) {
-                         cycle.duty = CycleDuty::Half;
+                         cycle.shape = CycleShape::SquareHalf;
                      } else if (on_length * 4 == cycle_length * 3) {
-                         cycle.duty = CycleDuty::ThreeQuarters;
+                         cycle.shape = CycleShape::SquareThreeQuarters;
                      }
                  }
                  bool rest_follows = runs[next_zero].length > SEVEN_EIGHTHS_OFF;
@@ -50,11 +50,11 @@ QVector<Cycle> SquareChannel::runs_to_cycles(QList<Run> &runs) {
         } else {
             cycle.runs.append(runs[i]);
             if (runs[i].length > SEVEN_EIGHTHS_OFF) {
-                cycle.duty = CycleDuty::None;
+                cycle.shape = CycleShape::None;
             }
         }
         cycles.append(cycle);
-        //qDebug() << cycle.start << cycle.duty << cycle.semitone_id << cycle.runs.count() << sum_run_lengths(cycle);
+        //qDebug() << cycle.start << cycle.shape << cycle.semitone_id << cycle.runs.count() << sum_run_lengths(cycle);
     }
     qDebug() << "Cycle count: " << cycles.size();
     return cycles;
@@ -67,29 +67,38 @@ QVector<ToneObject> SquareChannel::find_tones(QVector<Cycle> &cycles) {
     if (cycles.size() == 0) return tones;
     tone_start = cycles[0].start;
     tone.semitone_id = cycles[0].semitone_id;
-    tone.duty = cycles[0].duty;
+    tone.shape = cycles[0].shape;
     tone.cycles.append(cycles[0]);
     for (int i = 1; i < cycles.size(); i++) {
-        if (cycles[i].semitone_id != tone.semitone_id || cycles[i].duty != tone.duty) {
+        if (cycles[i].semitone_id != tone.semitone_id || cycles[i].shape != tone.shape) {
             tone.length = cycles[i].start - tone_start;
-            if (tone.duty != CycleDuty::None && tone.cycles.size() == 1) {
-                tone.duty = CycleDuty::Irregular;
+            if (tone.shape != CycleShape::None && tone.cycles.size() == 1) {
+                tone.shape = CycleShape::Irregular;
             }
             //qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
             tones.append(tone);
             tone_start = cycles[i].start;
-            tone = ToneObject { cycles[i].semitone_id, cycles[i].duty };
+            tone = ToneObject { cycles[i].semitone_id, cycles[i].shape };
         }
         tone.cycles.append(cycles[i]);
     }
     tone.length = sum_run_lengths(cycles.last());
-    if (tone.duty != CycleDuty::None && tone.cycles.size() == 1) {
-        tone.duty = CycleDuty::Irregular;
+    if (tone.shape != CycleShape::None && tone.cycles.size() == 1) {
+        tone.shape = CycleShape::Irregular;
     }
     //qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
     tones.append(tone);
     qDebug() << "Tone count: " << tones.size();
     return tones;
+}
+
+bool tone_is_square(const ToneObject &tone) {
+    return (
+        tone.shape == CycleShape::SquareEighth ||
+        tone.shape == CycleShape::SquareQuarter ||
+        tone.shape == CycleShape::SquareHalf ||
+        tone.shape == CycleShape::SquareThreeQuarters
+    );
 }
 
 void SquareChannel::fix_transitional_tones(QVector<ToneObject> &tones) {
@@ -98,7 +107,7 @@ void SquareChannel::fix_transitional_tones(QVector<ToneObject> &tones) {
     samplesize left_size;
     ToneObject left, right;
     for (int i = 1; (i+1) < tones.size(); ) {
-        if (tones[i-1].duty >= 4 || tones[i].duty < 4 || tones[i+1].duty >= 4) {
+        if (!tone_is_square(tones[i-1]) || tone_is_square(tones[i]) || !tone_is_square(tones[i+1])) {
             // Skip tones with standard duty cycles
             // and skip tones with nonstandard neighbors.
              i += 1;
@@ -118,11 +127,11 @@ void SquareChannel::fix_transitional_tones(QVector<ToneObject> &tones) {
         left_size = sum_run_lengths(tones[i-1].cycles.last()) * midpoint;
         //qDebug() << "Dividing tone" << i << "into" << left_size << "and" << tones[i].length - left_size;
         left.semitone_id = tones[i-1].semitone_id;
-        left.duty = CycleDuty::Fixed;
+        left.shape = CycleShape::Fixed;
         left.length = left_size;
         // TODO: Add cycles to left tone
         right.semitone_id = tones[i+1].semitone_id;
-        right.duty = CycleDuty::Fixed;
+        right.shape = CycleShape::Fixed;
         right.length = tones[i].length - left_size;
         // TODO: Add cycles to right tone
         tones.removeAt(i);
@@ -136,7 +145,7 @@ void SquareChannel::fix_transitional_tones(QVector<ToneObject> &tones) {
 void SquareChannel::fix_trailing_tones(QVector<ToneObject> &tones) {
     ToneObject left, right;
     for (int i = 1; i < tones.size(); ) {
-        if (tones[i-1].duty >= 4 || tones[i].duty < 4 || tones[i].duty == CycleDuty::Fixed) {
+        if (!tone_is_square(tones[i-1]) || tone_is_square(tones[i]) || tones[i].shape == CycleShape::Fixed) {
             // Skip tones with standard duty cycles
             // and skip tones with nonstandard neighbors.
             i += 1;
@@ -144,10 +153,10 @@ void SquareChannel::fix_trailing_tones(QVector<ToneObject> &tones) {
         }
         samplesize left_size = tones[i-1].match_after(tones[i]);
         left.semitone_id = tones[i-1].semitone_id;
-        left.duty = tones[i-1].duty;
+        left.shape = tones[i-1].shape;
         left.length = left_size;
         right.semitone_id = -999;
-        right.duty = CycleDuty::None;
+        right.shape = CycleShape::None;
         right.length = tones[i].length - left_size;
         tones.removeAt(i);
         if (left.length) {
@@ -164,7 +173,7 @@ void SquareChannel::fix_trailing_tones(QVector<ToneObject> &tones) {
 void SquareChannel::fix_leading_tones(QVector<ToneObject> &tones) {
     ToneObject left, right;
     for (int i = 0; (i+1) < tones.size(); ) {
-        if (tones[i].duty != CycleDuty::Irregular || tones[i+1].duty >= 4) {
+        if (tones[i].shape != CycleShape::Irregular || !tone_is_square(tones[i+1])) {
             // Skip tones with standard duty cycles
             // and skip tones with nonstandard neighbors.
             i += 1;
@@ -172,10 +181,10 @@ void SquareChannel::fix_leading_tones(QVector<ToneObject> &tones) {
         }
         samplesize right_size = tones[i+1].match_before(tones[i]);
         left.semitone_id = tones[i+1].semitone_id;
-        left.duty = CycleDuty::Irregular;
+        left.shape = CycleShape::Irregular;
         left.length = tones[i].length - right_size;
         right.semitone_id = tones[i+1].semitone_id;
-        right.duty = CycleDuty::Fixed;
+        right.shape = CycleShape::Fixed;
         right.length = right_size;
         tones.removeAt(i);
         if (left.length) {

@@ -24,7 +24,8 @@ SOURCES += \
         main.cpp \
         player.cpp \
         squarechannel.cpp \
-        toneobject.cpp
+        toneobject.cpp \
+        trianglechannel.cpp
 
 RESOURCES += qml.qrc
 
@@ -45,7 +46,8 @@ HEADERS += \
     generator.h \
     player.h \
     squarechannel.h \
-    toneobject.h
+    toneobject.h \
+    trianglechannel.h
 
 unix: LIBS += -larchive
 
