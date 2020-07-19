@@ -100,12 +100,12 @@ void AudioFile::openClicked()
 void AudioFile::read_runs() {
     const uint8_t CHANNELS = 5;
     Run run[CHANNELS];
-    uint8_t *block = new uint8_t[1789773 * 5];
+    samplevalue *block = new samplevalue[1789773 * 5];
     std::streamsize bytes_read = 0;
     sampleoff file_sample_i = 0;
     std::streamoff block_offset = 0;
-    uint8_t previous_value[CHANNELS];
-    uint8_t new_value[CHANNELS];
+    samplevalue previous_value[CHANNELS];
+    samplevalue new_value[CHANNELS];
 
     this->read_block(reinterpret_cast<char*>(block), bytes_read);
     if (bytes_read == 0) {
@@ -116,7 +116,7 @@ void AudioFile::read_runs() {
         QList<Run> run_list;
         this->channel_runs.append(run_list);
         new_value[channel_i] = block[block_offset + channel_i];
-        uint8_t raw_value = new_value[channel_i] - 128;
+        samplevalue raw_value = new_value[channel_i] - 128;
         if (channel_i < 4) {
             raw_value = raw_value >> 3;
         }
@@ -132,7 +132,7 @@ void AudioFile::read_runs() {
                 if (new_value[channel_i] != previous_value[channel_i]) {
                     run[channel_i].length = file_sample_i - run[channel_i].start;
                     this->channel_runs[channel_i].append(run[channel_i]);
-                    uint8_t raw_value = new_value[channel_i] - 128;
+                    samplevalue raw_value = new_value[channel_i] - 128;
                     if (channel_i < 4) {
                         raw_value = raw_value >> 3;
                     }

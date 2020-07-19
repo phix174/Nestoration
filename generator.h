@@ -10,7 +10,8 @@ struct Channel {
     QList<Run> runs;
     qint64 runs_i;
     qint64 runs_i_sample;
-    uint8_t *buffer;
+    samplevalue *buffer;
+    bool muted;
 };
 
 class AudioFile;
@@ -25,6 +26,7 @@ public:
 
     void init_soxr();
     void setChannels(QList<QList<Run>> channel_runs);
+    void toggle_mute(uint8_t channel_i);
     qint64 render_runs(Channel &channel, qint64 maxSize);
     void mix_channels(qint64 size);
     size_t resample_soxr(float out[], size_t size);

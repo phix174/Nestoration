@@ -12,7 +12,7 @@ Generator::Generator(const int output_rate)
     : output_rate(output_rate)
 {
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
-        this->channels[channel_i] = { QList<Run> {}, 0, 0, nullptr };
+        this->channels[channel_i] = { QList<Run> {}, 0, 0, nullptr, false };
     }
     this->init_soxr();
 }
@@ -47,11 +47,15 @@ void Generator::setChannels(QList<QList<Run>> channel_runs) {
     soxr_clear(this->soxr);
 }
 
+void Generator::toggle_mute(uint8_t channel_i) {
+    this->channels[channel_i].muted = !this->channels[channel_i].muted;
+}
+
 qint64 Generator::render_runs(Channel &channel, qint64 maxSize) {
     qint64 rendered_samples = 0;
     qint64 scaled_maxSize = maxSize * 1789773.0 / this->output_rate;
     if (channel.buffer == nullptr) {
-        channel.buffer = new uint8_t[scaled_maxSize];
+        channel.buffer = new samplevalue[scaled_maxSize];
     }
     while (channel.runs_i < channel.runs.size() && rendered_samples < scaled_maxSize) {
         Run run = channel.runs.at(channel.runs_i);
@@ -61,7 +65,8 @@ qint64 Generator::render_runs(Channel &channel, qint64 maxSize) {
             capped_samples = scaled_maxSize - rendered_samples;
         }
         channel.runs_i_sample += capped_samples;
-        memset(channel.buffer+rendered_samples, run.value, capped_samples);
+        samplevalue write_value = channel.muted ? 0 : run.value;
+        memset(channel.buffer+rendered_samples, write_value, capped_samples);
         rendered_samples += capped_samples;
         if (channel.runs_i_sample >= run.length) {
             channel.runs_i += 1;
@@ -74,12 +79,12 @@ qint64 Generator::render_runs(Channel &channel, qint64 maxSize) {
 void Generator::mix_channels(qint64 size) {
     for (qint64 sample_i = 0; sample_i < size; sample_i += 1) {
         float pulse_out = 0;
-        uint8_t pulse_sum = channels[0].buffer[sample_i] + channels[1].buffer[sample_i];
+        samplevalue pulse_sum = channels[0].buffer[sample_i] + channels[1].buffer[sample_i];
         if (pulse_sum > 0) {
             pulse_out = 95.88 / (8128.0 / pulse_sum + 100.0);
         }
         float tnd_out = 0;
-        uint8_t tnd_sum = channels[2].buffer[sample_i] + channels[3].buffer[sample_i] + channels[4].buffer[sample_i];
+        samplevalue tnd_sum = channels[2].buffer[sample_i] + channels[3].buffer[sample_i] + channels[4].buffer[sample_i];
         if (tnd_sum > 0) {
             tnd_out = 159.79 / (1 / (
                 channels[2].buffer[sample_i] / 8227.0 +

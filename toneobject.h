@@ -29,7 +29,7 @@ enum CycleShape {
 struct Run {
     sampleoff start;
     samplesize length;
-    uint8_t value;
+    samplevalue value;
 };
 
 struct BoolRun {

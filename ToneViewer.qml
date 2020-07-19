@@ -18,12 +18,17 @@ Item {
         anchors.fill: parent;
         spacing: 1
 
+        MuteButton {
+            property int channel_i: toneViewer.channel_i
+            width: 32
+            text: "M"
+        }
         PianoBackground {
             hasLabels: true
             width: 32
         }
         Item {
-            width: parent.width - 32 - parent.spacing
+            width: parent.width - (32 + parent.spacing) * 2
             height: noteHeight * tone_count
 
             PianoBackground {

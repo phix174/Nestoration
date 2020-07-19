@@ -51,6 +51,10 @@ void Player::play_pause() {
     }
 }
 
+void Player::toggle_mute(qint8 channel_i) {
+    this->generator->toggle_mute(channel_i);
+}
+
 void Player::stop() {
     this->audio->stop();
 }

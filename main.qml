@@ -58,7 +58,6 @@ ApplicationWindow {
                     player.seek(0)
                 }
             }
-
             Button {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Play/Pause"
@@ -68,6 +67,16 @@ ApplicationWindow {
                     toneviewer1.fudgeTimer.running = !toneviewer1.fudgeTimer.running;
                     toneviewer2.fudgeTimer.running = !toneviewer2.fudgeTimer.running;
                 }
+            }
+            MuteButton {
+                property int channel_i: 3
+                text: "Mute " + channel_i
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            MuteButton {
+                property int channel_i: 4
+                text: "Mute " + channel_i
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
@@ -82,14 +91,17 @@ ApplicationWindow {
 
             ToneViewer {
                 id: toneviewer0
+                property int channel_i: 0
                 property variant mainrepeater_model: audiofile.channel0
             }
             ToneViewer {
                 id: toneviewer1
+                property int channel_i: 1
                 property variant mainrepeater_model: audiofile.channel1
             }
             ToneViewer {
                 id: toneviewer2
+                property int channel_i: 2
                 property variant mainrepeater_model: audiofile.channel2
             }
         }
