@@ -42,6 +42,7 @@ ApplicationWindow {
                 onClicked: {
                     toneviewer0.fudgeTimer.running = false
                     toneviewer1.fudgeTimer.running = false
+                    toneviewer2.fudgeTimer.running = false
                     openClicked()
                     toneviewer0.reset()
                     toneviewer1.reset()
@@ -63,6 +64,7 @@ ApplicationWindow {
                     playPause()
                     toneviewer0.fudgeTimer.running = !toneviewer0.fudgeTimer.running;
                     toneviewer1.fudgeTimer.running = !toneviewer1.fudgeTimer.running;
+                    toneviewer2.fudgeTimer.running = !toneviewer2.fudgeTimer.running;
                 }
             }
         }
