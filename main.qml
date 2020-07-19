@@ -43,7 +43,9 @@ ApplicationWindow {
                     toneviewer0.fudgeTimer.running = false
                     toneviewer1.fudgeTimer.running = false
                     toneviewer2.fudgeTimer.running = false
-                    openClicked()
+                    player.stop()
+                    audiofile.openClicked()
+                    player.seek(0)
                     toneviewer0.reset()
                     toneviewer1.reset()
                     toneviewer2.reset()
@@ -53,7 +55,7 @@ ApplicationWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Seek 0"
                 onClicked: {
-                    playerSeek(0)
+                    player.seek(0)
                 }
             }
 
@@ -61,7 +63,7 @@ ApplicationWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Play/Pause"
                 onClicked: {
-                    playPause()
+                    player.play_pause()
                     toneviewer0.fudgeTimer.running = !toneviewer0.fudgeTimer.running;
                     toneviewer1.fudgeTimer.running = !toneviewer1.fudgeTimer.running;
                     toneviewer2.fudgeTimer.running = !toneviewer2.fudgeTimer.running;
@@ -80,15 +82,15 @@ ApplicationWindow {
 
             ToneViewer {
                 id: toneviewer0
-                property variant mainrepeater_model: channel0
+                property variant mainrepeater_model: audiofile.channel0
             }
             ToneViewer {
                 id: toneviewer1
-                property variant mainrepeater_model: channel1
+                property variant mainrepeater_model: audiofile.channel1
             }
             ToneViewer {
                 id: toneviewer2
-                property variant mainrepeater_model: channel2
+                property variant mainrepeater_model: audiofile.channel2
             }
         }
     }

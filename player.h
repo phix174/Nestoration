@@ -5,29 +5,33 @@
 #include <QAudioOutput>
 
 #include "generator.h"
-
-struct Run;
+#include "toneobject.h"
 
 class Player : public QObject
 {
     Q_OBJECT
-public:
-    explicit Player(AudioFile &audio_file, QObject *parent = nullptr);
+    Q_PROPERTY(qint64 position MEMBER position NOTIFY playerPositionChanged)
 
-    void setChannels(QList<Run> (&channel_runs)[5]);
+public:
+    explicit Player(QObject *parent = nullptr);
     void start();
+
+public slots:
+    void setChannels(QList<QList<Run>> channel_runs);
+    void handleStateChanged(QAudio::State new_state);
+    void handlePositionChanged(qint64 byte_position);
     void seek(qint64 sample_position);
     void play_pause();
     void stop();
 
-public slots:
-    void handleStateChanged(QAudio::State new_state);
-
 signals:
+    void playerPositionChanged(qint64 byte_position);
 
 private:
     QAudioOutput *audio;
     Generator *generator;
+    qint64 position = 0;
+
 };
 
 #endif // PLAYER_H

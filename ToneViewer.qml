@@ -6,8 +6,8 @@ Item {
     width: parent.width;
     height: noteHeight * tone_count
     property int extra_tones: 3
-    property int tone_count: highestTone - lowestTone + 2 * extra_tones
-    property int paddedHighestTone: highestTone + extra_tones
+    property int tone_count: audiofile.highestTone - audiofile.lowestTone + 2 * extra_tones
+    property int paddedHighestTone: audiofile.highestTone + extra_tones
     property alias fudgeTimer: fudgeTimer
     function reset() {
         scroller.ScrollBar.horizontal.position = 0;
@@ -71,7 +71,7 @@ Item {
                     }
                     onClicked: {
                         var mouse_x = mouse.x / itemsScale.xScale;
-                        playerSeek(mouse_x);
+                        player.seek(mouse_x);
                     }
                 }
 
@@ -87,10 +87,10 @@ Item {
                         property real fudge: 0
                         height: parent.height
                         width: 1 / itemsScale.xScale
-                        x: playerPosition * (1789773.0 / 48000.0) / 4.0 - 152727.0 + fudge
+                        x: player.position * (1789773.0 / 48000.0) / 4.0 - 152727.0 + fudge
                         color: "yellow"
                         visible: true
-                        readonly property int myPosition: playerPosition
+                        readonly property int myPosition: player.position
                         onMyPositionChanged: fudge = 0
 
                         Timer {

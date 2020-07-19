@@ -1,7 +1,7 @@
 import QtQuick 2.0
 
 Rectangle {
-    y: if (lowestTone <= model.semitone_id && model.semitone_id <= highestTone) {
+    y: if (audiofile.lowestTone <= model.semitone_id && model.semitone_id <= audiofile.highestTone) {
            (paddedHighestTone - model.semitone_id) * noteHeight
        } else {
            0

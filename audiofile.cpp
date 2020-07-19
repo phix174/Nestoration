@@ -7,8 +7,6 @@
 #include "audiofile.h"
 #include "channelmodel.h"
 #include "toneobject.h"
-#include "player.h"
-
 
 AudioFile::AudioFile(QObject *parent)
     : QObject(parent), lowest_tone(8), highest_tone(8+88)
@@ -16,7 +14,6 @@ AudioFile::AudioFile(QObject *parent)
     this->channel0 = new ChannelModel;
     this->channel1 = new ChannelModel;
     this->channel2 = new ChannelModel;
-    this->player = new Player { *this };
 }
 
 void AudioFile::open(const char *file_name)
@@ -48,7 +45,6 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 
 void AudioFile::openClicked()
 {
-    player->stop();
     QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a gzipped 5-channel WAV file", QString(), "gzipped WAV (*.wav.gz)");
     if (file_name == "") {
         return;
@@ -98,16 +94,7 @@ void AudioFile::openClicked()
     }
     emit this->lowestToneChanged(this->lowest_tone);
     emit this->highestToneChanged(this->highest_tone);
-    this->player->setChannels(this->channel_runs);
-    this->playerSeek(0);
-}
-
-void AudioFile::playerSeek(qint64 sample_position) {
-    this->player->seek(sample_position);
-}
-
-void AudioFile::playPause() {
-    this->player->play_pause();
+    emit this->channelRunsChanged(this->channel_runs);
 }
 
 void AudioFile::read_runs() {
@@ -124,8 +111,10 @@ void AudioFile::read_runs() {
     if (bytes_read == 0) {
         return;
     }
+    this->channel_runs.clear();
     for (int channel_i = 0; channel_i < CHANNELS; channel_i += 1) {
-        this->channel_runs[channel_i].clear();
+        QList<Run> run_list;
+        this->channel_runs.append(run_list);
         new_value[channel_i] = block[block_offset + channel_i];
         uint8_t raw_value = new_value[channel_i] - 128;
         if (channel_i < 4) {
@@ -178,11 +167,6 @@ void AudioFile::determine_range(QVector<ToneObject> &tones) {
             this->lowest_tone = floor(tone.semitone_id);
         }
     }
-}
-
-void AudioFile::setPosition(qint64 position) {
-    this->player_position = position;
-    emit this->playerPositionChanged(position);
 }
 
 void AudioFile::close() {

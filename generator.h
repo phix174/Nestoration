@@ -4,8 +4,7 @@
 #include <QIODevice>
 #include <QVector>
 #include "soxr.h"
-
-struct Run;
+#include "toneobject.h"
 
 struct Channel {
     QList<Run> runs;
@@ -18,13 +17,14 @@ class AudioFile;
 
 class Generator : public QIODevice
 {
+    Q_OBJECT
 
 public:
-    Generator(AudioFile &audio_file, const int output_rate);
+    Generator(const int output_rate);
     ~Generator();
 
     void init_soxr();
-    void setChannels(QList<Run> (&channel_runs)[5]);
+    void setChannels(QList<QList<Run>> channel_runs);
     qint64 render_runs(Channel &channel, qint64 maxSize);
     void mix_channels(qint64 size);
     size_t resample_soxr(float out[], size_t size);
@@ -33,7 +33,10 @@ public:
     qint64 readData(char *data, qint64 maxlen) override;
     qint64 writeData(const char *data, qint64 len) override;
 
-    AudioFile *audio_file;
+signals:
+    void positionChanged(qint64 byte_position);
+
+private:
     int output_rate;
     Channel channels[5];
     float *mixed_buffer = nullptr;

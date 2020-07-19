@@ -4,6 +4,7 @@
 #include <QSurfaceFormat>
 
 #include "audiofile.h"
+#include "player.h"
 #include "channelmodel.h"
 
 using namespace std;
@@ -17,8 +18,12 @@ int main(int argc, char *argv[])
     format.setSamples(4);
     QSurfaceFormat::setDefaultFormat(format);
     AudioFile audioFile;
+    Player player;
+    QObject::connect(&audioFile, SIGNAL(channelRunsChanged(QList<QList<Run>>)),
+                     &player, SLOT(setChannels(QList<QList<Run>>)));
     qRegisterMetaType<ChannelModel*>("ChannelModel*");
-    engine.rootContext()->setContextObject(&audioFile);
+    engine.rootContext()->setContextProperty("audiofile", &audioFile);
+    engine.rootContext()->setContextProperty("player", &player);
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
