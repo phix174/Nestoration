@@ -6,7 +6,7 @@ ApplicationWindow {
     visible: true
     width: 1920
     height: 1080
-    title: qsTr("Scroll")
+    title: qsTr("NestorQtion")
     property int noteHeight: 5
     property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
     readonly property int sHAPE_NONE: 0
