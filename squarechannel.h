@@ -3,8 +3,8 @@
 
 #include <QList>
 
-class Cycle;
-class Run;
+struct Run;
+struct Cycle;
 class ToneObject;
 
 class SquareChannel
