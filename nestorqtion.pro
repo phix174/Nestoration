@@ -1,3 +1,6 @@
+TEMPLATE = app
+TARGET = nestorqtion
+
 QT += quick
 QT += widgets
 QT += multimedia
@@ -51,4 +54,5 @@ HEADERS += \
 
 unix: LIBS += -larchive
 
-LIBS += -L/home/don/storage/tmp/libsoxr-testing/soxr-0.1.3-Source/Release/src -lsoxr
+#LIBS += -L/home/don/storage/tmp/libsoxr-testing/soxr-0.1.3-Source/Release/src -lsoxr
+LIBS += -L/home/don/storage/code/qt/soxr-0.1.3-Source -lsoxr
