@@ -1,6 +1,7 @@
 #ifndef AUDIOFILE_H
 #define AUDIOFILE_H
 
+#include <ios>
 #include <QObject>
 
 #include "squarechannel.h"
