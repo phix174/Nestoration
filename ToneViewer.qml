@@ -106,9 +106,10 @@ Item {
                     }
 
                     Rectangle {
+                        property real position_ratio: (1789773.0 / 48000.0) / 4.0
                         height: parent.height
                         width: 1 / global_xScale
-                        x: player.position * (1789773.0 / 48000.0) / 4.0 - 152727.0
+                        x: player.position * position_ratio - 152727.0
                         color: "yellow"
                         visible: true
                     }
