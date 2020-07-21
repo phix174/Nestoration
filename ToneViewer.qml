@@ -5,11 +5,13 @@ Item {
     id: toneViewer
     visible: false
     width: parent.width - parent.padding * 2;
-    property int noteHeight: 5
-    property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
-    height: noteHeight * tone_count
     property int extra_tones: 1
     property int tone_count: audiofile.highestTone - audiofile.lowestTone + 2 * extra_tones
+    property int thumbNoteHeight: (parent.height - (parent.topPadding + global_scrollbar.height + 3 * parent.spacing)) / (3 * tone_count)
+    property int fullNoteHeight: (parent.height - (parent.topPadding + global_scrollbar.height + parent.spacing)) / tone_count
+    property int noteHeight: thumbNoteHeight
+    property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
+    height: noteHeight * tone_count
     property int paddedHighestTone: audiofile.highestTone + extra_tones
     property alias scroller_width: scroller.width
     property alias mainrow_width: mainrow.width
@@ -130,7 +132,7 @@ Item {
             name: "thumb"
             PropertyChanges {
                 target: toneViewer
-                noteHeight: 5
+                noteHeight: thumbNoteHeight
                 visible: true
             }
         },
@@ -138,7 +140,7 @@ Item {
             name: "full"
             PropertyChanges {
                 target: toneViewer
-                noteHeight: 16
+                noteHeight: fullNoteHeight
                 visible: true
             }
         }
