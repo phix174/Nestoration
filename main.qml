@@ -25,15 +25,17 @@ ApplicationWindow {
             shape === sHAPE_SQUARE_THREEQUARTERS
         )
     }
+    property real global_xScale: toneviewer0.scroller_width / toneviewer0.mainrow_width
 
     Rectangle {
         id: tools
         width: parent.width
         height: 50
-        color: "#444444"
+        color: "#333333"
 
         Row {
             anchors.fill: parent
+            padding: 8
             spacing: 8
 
             Button {
@@ -46,9 +48,8 @@ ApplicationWindow {
                     player.stop()
                     audiofile.openClicked()
                     player.seek(0)
-                    toneviewer0.reset()
-                    toneviewer1.reset()
-                    toneviewer2.reset()
+                    global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
+                    global_scrollbar.position = 0;
                 }
             }
             Button {
@@ -85,10 +86,20 @@ ApplicationWindow {
         width: parent.width
         height: parent.height - y;
         color: "#444444";
+
         Column {
             anchors.fill: parent;
+            padding: 8
+            topPadding: 16
             spacing: 16
 
+            ScrollBar {
+                id: global_scrollbar
+                orientation: Qt.Horizontal
+                policy: ScrollBar.AlwaysOn
+                width: parent.width - parent.padding * 2
+                height: 24
+            }
             ToneViewer {
                 id: toneviewer0
                 property int channel_i: 0

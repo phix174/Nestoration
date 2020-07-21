@@ -3,16 +3,14 @@ import QtQuick.Controls 2.5
 
 Item {
     id: toneViewer
-    width: parent.width;
+    width: parent.width - parent.padding * 2;
     height: noteHeight * tone_count
-    property int extra_tones: 3
+    property int extra_tones: 1
     property int tone_count: audiofile.highestTone - audiofile.lowestTone + 2 * extra_tones
     property int paddedHighestTone: audiofile.highestTone + extra_tones
     property alias fudgeTimer: fudgeTimer
-    function reset() {
-        scroller.ScrollBar.horizontal.position = 0;
-        itemsScale.xScale = Qt.binding(function() { return scroller.width / mainrow.width });
-    }
+    property alias scroller_width: scroller.width
+    property alias mainrow_width: mainrow.width
 
     Row {
         anchors.fill: parent;
@@ -39,12 +37,13 @@ Item {
                 anchors.fill: parent;
                 implicitWidth: parent.width;
                 clip: true
-                ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
+                ScrollBar.horizontal: global_scrollbar
                 ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                 contentHeight: tone_count * noteHeight
-                contentWidth: mainrow.width * itemsScale.xScale
+                contentWidth: mainrow.width * global_xScale
 
                 MouseArea {
+                    id: viewerMouseArea
                     height: parent.height
                     width: Math.max(mainrow.width, scroller.width)
                     onWheel: {
@@ -52,30 +51,30 @@ Item {
                         var scale_factor = 1.2;
                         var bound_again = false;
                         if (wheel.angleDelta.y < 0) {
-                            if (itemsScale.xScale / scale_factor > scroller.width / mainrow.width) {
+                            if (global_xScale / scale_factor > scroller.width / mainrow.width) {
                                 // If zooming out wouldn't zoom out too far, go ahead and do it.
                                 scale_factor = 1 / scale_factor;
                             } else {
                                 // Otherwise, only zoom out as much as needed to fit the whole file.
-                                toneViewer.reset();
+                                global_xScale = Qt.binding(function() { return scroller.width / mainrow.width });
                                 bound_again = true;
                             }
-                        } else if (itemsScale.xScale * scale_factor > 1) {
+                        } else if (global_xScale * scale_factor > 1) {
                             // If zooming in would zoom in too far, only zoom in to 1:1.
-                            scale_factor = 1 / itemsScale.xScale;
+                            scale_factor = 1 / global_xScale;
                         }
                         if (!bound_again) {
-                            var mouse_x = wheel.x / (mainrow.width * itemsScale.xScale);
+                            var mouse_x = wheel.x / (mainrow.width * global_xScale);
                             var position_new = Math.max(0, position_old + (mouse_x - position_old) * (1 - 1 / scale_factor));
-                            itemsScale.xScale *= scale_factor;
+                            global_xScale *= scale_factor;
                             if (position_new + scroller.ScrollBar.horizontal.size > 1) {
                                 position_new = Math.max(0, 1 - scroller.ScrollBar.horizontal.size);
                             }
-                            scroller.ScrollBar.horizontal.position = position_new;
+                            global_scrollbar.position = position_new;
                         }
                     }
                     onClicked: {
-                        var mouse_x = mouse.x / itemsScale.xScale;
+                        var mouse_x = mouse.x / global_xScale;
                         player.seek(mouse_x);
                     }
                 }
@@ -85,13 +84,13 @@ Item {
                     width: mainrow.width
                     transform: Scale {
                         id: itemsScale
-                        xScale: scroller.width / mainrow.width
+                        xScale: global_xScale
                     }
 
                     Rectangle {
                         property real fudge: 0
                         height: parent.height
-                        width: 1 / itemsScale.xScale
+                        width: 1 / global_xScale
                         x: player.position * (1789773.0 / 48000.0) / 4.0 - 152727.0 + fudge
                         color: "yellow"
                         visible: true
