@@ -27,16 +27,10 @@ int ChannelModel::rowCount(const QModelIndex &parent) const
     return this->tones.size();
 }
 
-QVariant ChannelModel::data(const QModelIndex &index, int role) const
-{
-    if (!index.isValid())
+QVariant ChannelModel::data(const QModelIndex &index, int role) const {
+    if (!index.isValid() || index.row() > this->rowCount())
         return QVariant();
-
-    if (index.row() < 0 || rowCount() < index.row())
-        return QVariant();
-
     const ToneObject tone = this->tones.at(index.row());
-
     switch (role) {
         case SemiToneIdRole:
             return QVariant(tone.semitone_id);
@@ -51,12 +45,39 @@ QVariant ChannelModel::data(const QModelIndex &index, int role) const
             return QVariant(tone.name());
         break;
     }
-
     return QVariant();
 }
 
-QHash<int, QByteArray> ChannelModel::roleNames() const
-{
+Qt::ItemFlags ChannelModel::flags(const QModelIndex &index) const {
+    if (!index.isValid() || index.row() > this->rowCount())
+        return Qt::NoItemFlags;
+    return Qt::ItemIsEnabled | Qt::ItemIsEditable;
+}
+
+bool ChannelModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+    if (!index.isValid() || index.row() > this->rowCount())
+        return false;
+    ToneObject *tone = &this->tones[index.row()];
+    bool changed { false };
+    switch (role) {
+        case SemiToneIdRole:
+            changed = (tone->semitone_id != value.toDouble());
+            tone->semitone_id = value.toDouble();
+        break;
+        case ShapeRole:
+            changed = (tone->shape != value.toInt());
+            tone->shape = value.toInt();
+        break;
+        case LengthRole:
+            changed = (tone->length != value.toInt());
+            tone->length = value.toInt();
+        break;
+    }
+    if (changed) emit dataChanged(index, index, {role});
+    return true;
+}
+
+QHash<int, QByteArray> ChannelModel::roleNames() const {
     QHash<int, QByteArray> roles;
     roles[SemiToneIdRole] = "semitone_id";
     roles[ShapeRole] = "shape";
