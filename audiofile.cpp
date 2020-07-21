@@ -23,6 +23,7 @@ void AudioFile::open(const char *file_name)
     WAVheader header;
     m_archive = archive_read_new();
     archive_read_support_filter_gzip(m_archive);
+    archive_read_support_filter_xz(m_archive);
     archive_read_support_format_raw(m_archive);
     result = archive_read_open_filename(m_archive, file_name, 1048576);
     if (result != ARCHIVE_OK) {
@@ -45,7 +46,7 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 
 void AudioFile::openClicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a gzipped 5-channel WAV file", QString(), "gzipped WAV (*.wav.gz)");
+    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a gzipped 5-channel WAV file", QString(), "Compressed WAV (*.wav.gz *.wav.xz)");
     if (file_name == "") {
         return;
     }
