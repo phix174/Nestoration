@@ -42,9 +42,6 @@ ApplicationWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Open..."
                 onClicked: {
-                    toneviewer0.fudgeTimer.running = false
-                    toneviewer1.fudgeTimer.running = false
-                    toneviewer2.fudgeTimer.running = false
                     player.stop()
                     audiofile.openClicked()
                     player.seek(0)
@@ -64,9 +61,6 @@ ApplicationWindow {
                 text: "Play/Pause"
                 onClicked: {
                     player.play_pause()
-                    toneviewer0.fudgeTimer.running = !toneviewer0.fudgeTimer.running;
-                    toneviewer1.fudgeTimer.running = !toneviewer1.fudgeTimer.running;
-                    toneviewer2.fudgeTimer.running = !toneviewer2.fudgeTimer.running;
                 }
             }
             MuteButton {
