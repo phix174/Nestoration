@@ -7,8 +7,8 @@ Item {
     width: parent.width - parent.padding * 2;
     property int extra_tones: 1
     property int tone_count: audiofile.highestTone - audiofile.lowestTone + 2 * extra_tones
-    property int thumbNoteHeight: (parent.height - (parent.topPadding + global_scrollbar.height + 3 * parent.spacing)) / (3 * tone_count)
-    property int fullNoteHeight: (parent.height - (parent.topPadding + global_scrollbar.height + parent.spacing)) / tone_count
+    property int thumbNoteHeight: (parent.height - 2 * parent.spacing) / (3 * tone_count)
+    property int fullNoteHeight: parent.height / tone_count
     property int noteHeight: thumbNoteHeight
     property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
     height: noteHeight * tone_count
@@ -56,7 +56,6 @@ Item {
                 implicitWidth: parent.width;
                 clip: true
                 ScrollBar.horizontal: global_scrollbar
-                ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                 contentHeight: tone_count * noteHeight
                 contentWidth: mainrow.width * global_xScale
 

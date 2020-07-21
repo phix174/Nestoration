@@ -1,5 +1,6 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.5
+import QtQuick.Layouts 1.12
 
 ApplicationWindow {
     id: root
@@ -36,89 +37,96 @@ ApplicationWindow {
     }
 
     Rectangle {
-        id: tools
-        width: parent.width
-        height: 50
-        color: "#333333"
+        anchors.fill: parent
+        color: "#444444"
 
-        Row {
+        ColumnLayout {
             anchors.fill: parent
-            padding: 8
-            spacing: 8
 
-            Button {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Open..."
-                onClicked: {
-                    player.stop()
-                    audiofile.openClicked()
-                    toneviewer0.state = "thumb"
-                    toneviewer1.state = "thumb"
-                    toneviewer2.state = "thumb"
-                    player.seek(0)
-                    global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
-                    global_scrollbar.position = 0;
+            Rectangle {
+                id: tools
+                Layout.fillWidth: true
+                height: 50
+                color: "#333333"
+
+                Row {
+                    anchors.fill: parent
+                    padding: 8
+                    spacing: 8
+
+                    Button {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Open..."
+                        onClicked: {
+                            player.stop();
+                            audiofile.openClicked();
+                            toneviewer0.state = "thumb";
+                            toneviewer1.state = "thumb";
+                            toneviewer2.state = "thumb";
+                            player.seek(0);
+                            global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
+                            global_scrollbar.position = 0;
+                        }
+                    }
+                    Button {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Seek 0"
+                        onClicked: {
+                            player.seek(0)
+                        }
+                    }
+                    Button {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Play/Pause"
+                        onClicked: {
+                            player.play_pause()
+                        }
+                    }
+                    MuteButton {
+                        property int channel_i: 3
+                        text: "Mute " + channel_i
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    MuteButton {
+                        property int channel_i: 4
+                        text: "Mute " + channel_i
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
             }
-            Button {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Seek 0"
-                onClicked: {
-                    player.seek(0)
-                }
-            }
-            Button {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Play/Pause"
-                onClicked: {
-                    player.play_pause()
-                }
-            }
-            MuteButton {
-                property int channel_i: 3
-                text: "Mute " + channel_i
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            MuteButton {
-                property int channel_i: 4
-                text: "Mute " + channel_i
-                anchors.verticalCenter: parent.verticalCenter
-            }
-        }
-    }
-    Rectangle {
-        y: tools.height
-        width: parent.width
-        height: parent.height - y;
-        color: "#444444";
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-        Column {
-            anchors.fill: parent;
-            padding: 8
-            topPadding: 16
-            spacing: 16
+                Column {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.margins: 16
+                    spacing: 16
 
-            ScrollBar {
-                id: global_scrollbar
-                orientation: Qt.Horizontal
-                policy: ScrollBar.AlwaysOn
-                width: parent.width - parent.padding * 2
-                height: 24
-            }
-            ToneViewer {
-                id: toneviewer0
-                property int channel_i: 0
-                property variant mainrepeater_model: audiofile.channel0
-            }
-            ToneViewer {
-                id: toneviewer1
-                property int channel_i: 1
-                property variant mainrepeater_model: audiofile.channel1
-            }
-            ToneViewer {
-                id: toneviewer2
-                property int channel_i: 2
-                property variant mainrepeater_model: audiofile.channel2
+                    ToneViewer {
+                        id: toneviewer0
+                        property int channel_i: 0
+                        property variant mainrepeater_model: audiofile.channel0
+                    }
+                    ToneViewer {
+                        id: toneviewer1
+                        property int channel_i: 1
+                        property variant mainrepeater_model: audiofile.channel1
+                    }
+                    ToneViewer {
+                        id: toneviewer2
+                        property int channel_i: 2
+                        property variant mainrepeater_model: audiofile.channel2
+                    }
+                }
+                ScrollBar {
+                    id: global_scrollbar
+                    orientation: Qt.Horizontal
+                    policy: ScrollBar.AlwaysOn
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 24
+                }
             }
         }
     }

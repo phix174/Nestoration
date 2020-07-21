@@ -29,8 +29,8 @@ Rectangle {
            } else if (model.shape === sHAPE_FIXED) {
                "#ff9900"
            }
-
     z: if (model.shape === sHAPE_IRREGULAR || model.shape === sHAPE_FIXED) { 1 } else { 0 }
+
     Rectangle {
         width: 1 / itemsScale.xScale
         height: parent.height
