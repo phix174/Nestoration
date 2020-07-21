@@ -3,7 +3,10 @@ import QtQuick.Controls 2.5
 
 Item {
     id: toneViewer
+    visible: false
     width: parent.width - parent.padding * 2;
+    property int noteHeight: 5
+    property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
     height: noteHeight * tone_count
     property int extra_tones: 1
     property int tone_count: audiofile.highestTone - audiofile.lowestTone + 2 * extra_tones
@@ -15,11 +18,25 @@ Item {
         anchors.fill: parent;
         spacing: 1
 
-        MuteButton {
-            property int channel_i: toneViewer.channel_i
+        Column {
             width: 32
-            text: "M"
+            spacing: 1
+
+            MuteButton {
+                width: parent.width
+                property int channel_i: toneViewer.channel_i
+                text: "M"
+            }
+            Button {
+                width: parent.width
+                text: "Z"
+                onClicked: zoomToneViewer(toneViewer.channel_i)
+                background: Rectangle {
+                    color: "#777777"
+                }
+            }
         }
+
         PianoBackground {
             hasLabels: true
             width: 32
@@ -107,4 +124,23 @@ Item {
             }
         }
     }
+
+    states: [
+        State {
+            name: "thumb"
+            PropertyChanges {
+                target: toneViewer
+                noteHeight: 5
+                visible: true
+            }
+        },
+        State {
+            name: "full"
+            PropertyChanges {
+                target: toneViewer
+                noteHeight: 16
+                visible: true
+            }
+        }
+    ]
 }

@@ -7,8 +7,6 @@ ApplicationWindow {
     width: 1920
     height: 1080
     title: qsTr("NestorQtion")
-    property int noteHeight: 5
-    property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
     readonly property int sHAPE_NONE: 0
     readonly property int sHAPE_SQUARE_EIGHTH: 1
     readonly property int sHAPE_SQUARE_QUARTER: 2
@@ -26,6 +24,16 @@ ApplicationWindow {
         )
     }
     property real global_xScale: toneviewer0.scroller_width / toneviewer0.mainrow_width
+    function zoomToneViewer(channel_i) {
+        var viewers = [toneviewer0, toneviewer1, toneviewer2];
+        var viewer_to_toggle = viewers[channel_i];
+        var new_state = (viewer_to_toggle.state === "thumb" ? "full" : "thumb");
+        var others_state= (new_state === "thumb" ? "thumb" : "");
+        for (let viewer of viewers) {
+            viewer.state = others_state;
+        }
+        viewer_to_toggle.state = new_state;
+    }
 
     Rectangle {
         id: tools
@@ -44,6 +52,9 @@ ApplicationWindow {
                 onClicked: {
                     player.stop()
                     audiofile.openClicked()
+                    toneviewer0.state = "thumb"
+                    toneviewer1.state = "thumb"
+                    toneviewer2.state = "thumb"
                     player.seek(0)
                     global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
                     global_scrollbar.position = 0;
