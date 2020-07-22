@@ -6,5 +6,6 @@
         <file>SquareTone.qml</file>
         <file>PianoBackground.qml</file>
         <file>MuteButton.qml</file>
+        <file>ADSR.qml</file>
     </qresource>
 </RCC>
