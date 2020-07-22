@@ -11,7 +11,7 @@ SquareChannel::SquareChannel()
 QVector<Cycle> SquareChannel::runs_to_cycles(QList<Run> &runs) {
     const samplesize SEVEN_EIGHTHS_OFF = 28672; // 32768 * 7/8
     QVector<Cycle> cycles;
-    const Cycle clear_cycle = { 0, CycleShape::Irregular, -999, {} };
+    const Cycle clear_cycle = { 0, CycleShape::Irregular, -999, -999, {} };
     for (int i=0; i < runs.size(); i += 1) {
         Cycle cycle = clear_cycle;
         cycle.start = runs[i].start;
@@ -44,6 +44,7 @@ QVector<Cycle> SquareChannel::runs_to_cycles(QList<Run> &runs) {
                      i -= 1;
                  } else {
                      cycle.semitone_id = period_to_semitone(cycle_length);
+                     cycle.nes_timer = period_to_nes_timer(cycle_length);
                      cycle.runs.append(runs[next_zero]);
                  }
             }
@@ -67,6 +68,7 @@ QVector<ToneObject> SquareChannel::find_tones(QVector<Cycle> &cycles) {
     if (cycles.size() == 0) return tones;
     tone_start = cycles[0].start;
     tone.semitone_id = cycles[0].semitone_id;
+    tone.nes_timer = cycles[0].nes_timer;
     tone.shape = cycles[0].shape;
     tone.cycles.append(cycles[0]);
     for (int i = 1; i < cycles.size(); i++) {
@@ -78,7 +80,7 @@ QVector<ToneObject> SquareChannel::find_tones(QVector<Cycle> &cycles) {
             //qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
             tones.append(tone);
             tone_start = cycles[i].start;
-            tone = ToneObject { cycles[i].semitone_id, cycles[i].shape };
+            tone = ToneObject { cycles[i].semitone_id, cycles[i].nes_timer, cycles[i].shape };
         }
         tone.cycles.append(cycles[i]);
     }

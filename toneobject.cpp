@@ -10,19 +10,23 @@ ToneObject::ToneObject()
     this->cycles = {};
 }
 
-ToneObject::ToneObject(const double &semitone_id, const short int &shape)
-    : semitone_id(semitone_id), shape(shape)
+ToneObject::ToneObject(const double &semitone_id, qint16 nes_timer, const short int &shape)
+    : semitone_id(semitone_id), nes_timer(nes_timer), shape(shape)
 {
     this->length = 0;
     this->cycles = {};
 }
 
-QString ToneObject::name() const
-{
+QString ToneObject::name() const {
+    if (this->semitone_id < 0) {
+        return "Silence";
+    }
     int closest = round(this->semitone_id);
     QString name_only = note_names[closest % 12];
-    QString octave = QString::number(closest / 12);
-    return name_only + octave;
+    QString octave = QString::number(closest / 12 - 1);
+    int cents = 100 * (this->semitone_id - closest);
+    QString cents_plus = cents > 0 ? "+" : "";
+    return name_only + octave + cents_plus + QString::number(cents) + "¢";
 }
 
 samplesize ToneObject::match_before(ToneObject &before, samplesize max_length) {

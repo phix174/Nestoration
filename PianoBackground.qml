@@ -9,7 +9,7 @@ Column {
         model: tone_count
         delegate: Rectangle {
             property int pitch_class: (paddedHighestTone - index) % 12
-            property int octave: Math.floor((paddedHighestTone - index) / 12)
+            property int octave: Math.floor((paddedHighestTone - index) / 12) - 1
             height: noteHeight - noteSpacing
             width: parent.width
             color: { if ([1, 3, 6, 8, 10].includes(pitch_class)) { return "#555555" } else { return "#666666" } }

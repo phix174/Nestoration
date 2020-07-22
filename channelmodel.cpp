@@ -35,6 +35,9 @@ QVariant ChannelModel::data(const QModelIndex &index, int role) const {
         case SemiToneIdRole:
             return QVariant(tone.semitone_id);
         break;
+        case NesTimerRole:
+            return QVariant(tone.nes_timer);
+        break;
         case ShapeRole:
             return QVariant(tone.shape);
         break;
@@ -64,6 +67,10 @@ bool ChannelModel::setData(const QModelIndex &index, const QVariant &value, int 
             changed = (tone->semitone_id != value.toDouble());
             tone->semitone_id = value.toDouble();
         break;
+        case NesTimerRole:
+            changed = (tone->nes_timer != value.toInt());
+            tone->nes_timer = value.toInt();
+        break;
         case ShapeRole:
             changed = (tone->shape != value.toInt());
             tone->shape = value.toInt();
@@ -80,6 +87,7 @@ bool ChannelModel::setData(const QModelIndex &index, const QVariant &value, int 
 QHash<int, QByteArray> ChannelModel::roleNames() const {
     QHash<int, QByteArray> roles;
     roles[SemiToneIdRole] = "semitone_id";
+    roles[NesTimerRole] = "nes_timer";
     roles[ShapeRole] = "shape";
     roles[LengthRole] = "length";
     roles[NameRole] = "name";

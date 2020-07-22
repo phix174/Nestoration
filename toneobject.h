@@ -12,8 +12,8 @@ typedef long samplesize;
 
 const double CPU_FREQENCY = 1789773.0;
 const double TWELFTH_ROOT = pow(2.0, 1.0 / 12.0);
-const double A0 = 440.0 / pow(2, 4);
-const double C0 = A0 * pow(TWELFTH_ROOT, -9.0);
+const double ANEG1 = 440.0 / pow(2, 5);
+const double CNEG1 = ANEG1 * pow(TWELFTH_ROOT, -9.0);
 
 enum CycleShape {
     None,
@@ -42,6 +42,7 @@ struct Cycle {
     sampleoff start;
     CycleShape shape;
     double semitone_id;
+    qint16 nes_timer;
     QList<Run> runs;
 };
 
@@ -55,16 +56,22 @@ inline samplesize sum_run_lengths(Cycle &cycle) {
 
 inline double period_to_semitone(const samplesize &period) {
     double frequency = CPU_FREQENCY / period;
-    return log(frequency / C0) / log(TWELFTH_ROOT);
+    return log(frequency / CNEG1) / log(TWELFTH_ROOT);
+}
+
+inline qint16 period_to_nes_timer(const samplesize &period) {
+    qint16 nes_timer = (period >> 4) - 1;
+    return nes_timer;
 }
 
 class ToneObject {
 
 public:
     explicit ToneObject();
-    explicit ToneObject(const double &semitone_id, const short int &shape);
+    explicit ToneObject(const double &semitone_id, qint16 nes_timer, const short int &shape);
 
     double semitone_id;
+    qint16 nes_timer;
     short int shape;
     samplesize length;
     QVector<Cycle> cycles;
@@ -77,7 +84,7 @@ private:
 };
 
 const QStringList note_names {
-    "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"
+    "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
 };
 
 #endif // TONEOBJECT_H

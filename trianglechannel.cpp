@@ -12,7 +12,7 @@ QVector<Cycle> TriangleChannel::runs_to_cycles(QList<Run> &runs) {
     const samplesize LONGEST_CYCLE = 32768;
     QVector<Cycle> cycles;
     if (runs.size() == 0) return cycles;
-    const Cycle clear_cycle = { 0, CycleShape::Irregular, -999, {} };
+    const Cycle clear_cycle = { 0, CycleShape::Irregular, -999, -999, {} };
     Cycle cycle = clear_cycle;
     cycle.start = runs[0].start;
     cycle.runs.append(runs[0]);
@@ -76,7 +76,7 @@ QVector<ToneObject> TriangleChannel::find_tones(QVector<Cycle> &cycles) {
             //qDebug() << "Semitone" << tone.semitone_id << "for" << tone.length / 1789773.0 << "sec," << tone.cycles.size() << "cycles";
             tones.append(tone);
             tone_start = cycles[i].start;
-            tone = ToneObject { cycles[i].semitone_id, cycles[i].shape };
+            tone = ToneObject { cycles[i].semitone_id, cycles[i].nes_timer, cycles[i].shape };
         }
         tone.cycles.append(cycles[i]);
     }

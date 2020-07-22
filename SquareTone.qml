@@ -31,6 +31,24 @@ Rectangle {
            }
     z: if (model.shape === sHAPE_IRREGULAR || model.shape === sHAPE_FIXED) { 1 } else { 0 }
 
+    MouseArea {
+        anchors.fill: parent
+        onClicked: {
+            input_nes_timer.text = model.nes_timer
+            input_length.text = model.length
+            input_name.text = model.name
+            input_semitone_id.text = Math.round(model.semitone_id * 1000) / 1000
+            input_shape.text = [
+                    "Flat",
+                    "Square 1/8",
+                    "Square 1/4",
+                    "Square 1/2",
+                    "Square 3/4",
+                    "Triangle",
+                    "Irregular",
+                    "Fixed"][model.shape]
+        }
+    }
     Rectangle {
         width: 1 / itemsScale.xScale
         height: parent.height

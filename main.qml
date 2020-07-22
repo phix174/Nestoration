@@ -42,6 +42,7 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
+            spacing: 0
 
             Rectangle {
                 id: tools
@@ -101,7 +102,7 @@ ApplicationWindow {
                 Column {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.margins: 16
+                    Layout.margins: 8
                     spacing: 16
 
                     ToneViewer {
@@ -126,6 +127,40 @@ ApplicationWindow {
                     policy: ScrollBar.AlwaysOn
                     Layout.fillWidth: true
                     Layout.preferredHeight: 24
+                }
+                Rectangle {
+                    id: info_pane
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 100
+                    color: "#445566"
+
+                    Frame {
+                        anchors.fill: parent
+                        anchors.margins: 8
+
+                        Row {
+                            spacing: 16
+                            GridLayout {
+                                columns: 2
+
+                                Label { text: "NES Timer:"; color: "#ffffff" }
+                                TextInput { id: input_nes_timer; color: "#ffffff"; readOnly: true }
+
+                                Label { text: "Note:"; color: "#ffffff" }
+                                TextInput { id: input_name; color: "#ffffff"; readOnly: true }
+                                Label { text: "MIDI Note:"; color: "#ffffff" }
+                                TextInput { id: input_semitone_id; color: "#ffffff" }
+                            }
+                            GridLayout {
+                                columns: 2
+
+                                Label { text: "Length (samples):"; color: "#ffffff" }
+                                TextInput { id: input_length; color: "#ffffff" }
+                                Label { text: "Shape:"; color: "#ffffff" }
+                                TextInput { id: input_shape; color: "#ffffff" }
+                            }
+                        }
+                    }
                 }
             }
         }
