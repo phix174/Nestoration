@@ -40,6 +40,7 @@ signals:
 
 private:
     int internal_rate = 1789773;
+    qreal resolution_multiplier = 1;
     int output_rate;
     qreal sample_rate_ratio;
     Channel channels[5];

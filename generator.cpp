@@ -35,7 +35,7 @@ void Generator::init_soxr() {
     const int use_threads = 1;
     const soxr_runtime_spec_t runtime_spec = soxr_runtime_spec(use_threads);
     soxr_error_t error;
-    this->soxr = soxr_create(this->internal_rate, this->output_rate, 1, &error, &io_spec, &quality_spec, &runtime_spec);
+    this->soxr = soxr_create(this->internal_rate * this->resolution_multiplier, this->output_rate, 1, &error, &io_spec, &quality_spec, &runtime_spec);
 }
 
 void Generator::setChannels(QList<QList<Run>> channel_runs) {
@@ -58,7 +58,8 @@ qint64 Generator::render_runs(Channel &channel, qint64 output_samples_requested)
     // TODO: I'm not sure what to do about the noninteger number of samples needed.
     qint64 internal_samples_needed = std::round(output_samples_requested * this->sample_rate_ratio);
     if (channel.buffer == nullptr) {
-        channel.buffer = new samplevalue[internal_samples_needed];
+        qint64 buffer_size = internal_samples_needed * this->resolution_multiplier;
+        channel.buffer = new samplevalue[buffer_size];
     }
     while (channel.runs_i < channel.runs.size() && rendered_samples < internal_samples_needed) {
         Run run = channel.runs.at(channel.runs_i);
@@ -68,15 +69,17 @@ qint64 Generator::render_runs(Channel &channel, qint64 output_samples_requested)
             capped_samples = internal_samples_needed - rendered_samples;
         }
         channel.runs_i_sample += capped_samples;
-        samplevalue write_value = channel.muted ? 0 : run.value;
-        memset(channel.buffer+rendered_samples, write_value, capped_samples);
+        samplevalue *buffer_offset = channel.buffer + static_cast<qint64>(rendered_samples * this->resolution_multiplier);
+        samplevalue buffer_value = channel.muted ? 0 : run.value;
+        qint64 buffer_samples = capped_samples * this->resolution_multiplier;
+        memset(buffer_offset, buffer_value, buffer_samples);
         rendered_samples += capped_samples;
         if (channel.runs_i_sample >= run.length) {
             channel.runs_i += 1;
             channel.runs_i_sample = 0;
         }
     }
-    return rendered_samples;
+    return rendered_samples * resolution_multiplier;
 }
 
 void Generator::mix_channels(qint64 size) {
@@ -99,7 +102,7 @@ void Generator::mix_channels(qint64 size) {
 }
 
 size_t Generator::resample_soxr(float out[], size_t in_size) {
-    size_t out_size = std::round(in_size / this->sample_rate_ratio);
+    size_t out_size = std::round(in_size / this->sample_rate_ratio / this->resolution_multiplier);
     size_t idone, odone;
     soxr_error_t error = soxr_process(this->soxr,
         this->mixed_buffer, in_size, &idone,
