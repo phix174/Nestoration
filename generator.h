@@ -29,7 +29,7 @@ public:
     void toggle_mute(uint8_t channel_i);
     qint64 render_runs(Channel &channel, qint64 maxSize);
     void mix_channels(qint64 size);
-    size_t resample_soxr(float out[], size_t size);
+    size_t resample_soxr(float out[], size_t in_size);
 
     bool seek_sample(qint64 sample_position);
     qint64 readData(char *data, qint64 maxlen) override;
@@ -39,7 +39,9 @@ signals:
     void positionChanged(qint64 byte_position);
 
 private:
+    int internal_rate = 1789773;
     int output_rate;
+    qreal sample_rate_ratio;
     Channel channels[5];
     float *mixed_buffer = nullptr;
     float *downsampled_buffer = nullptr;

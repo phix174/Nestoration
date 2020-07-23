@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <algorithm>
+#include <cmath>
 
 #include "generator.h"
 #include "toneobject.h"
@@ -11,6 +12,7 @@ extern "C" {
 Generator::Generator(const int output_rate)
     : output_rate(output_rate)
 {
+    this->sample_rate_ratio = static_cast<double>(this->internal_rate) / this->output_rate;
     for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
         this->channels[channel_i] = { QList<Run> {}, 0, 0, nullptr, false };
     }
@@ -33,7 +35,7 @@ void Generator::init_soxr() {
     const int use_threads = 1;
     const soxr_runtime_spec_t runtime_spec = soxr_runtime_spec(use_threads);
     soxr_error_t error;
-    this->soxr = soxr_create(1789773, this->output_rate, 1, &error, &io_spec, &quality_spec, &runtime_spec);
+    this->soxr = soxr_create(this->internal_rate, this->output_rate, 1, &error, &io_spec, &quality_spec, &runtime_spec);
 }
 
 void Generator::setChannels(QList<QList<Run>> channel_runs) {
@@ -51,18 +53,19 @@ void Generator::toggle_mute(uint8_t channel_i) {
     this->channels[channel_i].muted = !this->channels[channel_i].muted;
 }
 
-qint64 Generator::render_runs(Channel &channel, qint64 maxSize) {
+qint64 Generator::render_runs(Channel &channel, qint64 output_samples_requested) {
     qint64 rendered_samples = 0;
-    qint64 scaled_maxSize = maxSize * 1789773.0 / this->output_rate;
+    // TODO: I'm not sure what to do about the noninteger number of samples needed.
+    qint64 internal_samples_needed = std::round(output_samples_requested * this->sample_rate_ratio);
     if (channel.buffer == nullptr) {
-        channel.buffer = new samplevalue[scaled_maxSize];
+        channel.buffer = new samplevalue[internal_samples_needed];
     }
-    while (channel.runs_i < channel.runs.size() && rendered_samples < scaled_maxSize) {
+    while (channel.runs_i < channel.runs.size() && rendered_samples < internal_samples_needed) {
         Run run = channel.runs.at(channel.runs_i);
         qint64 remaining_run_samples = run.length - channel.runs_i_sample;
         qint64 capped_samples = remaining_run_samples;
-        if (rendered_samples + remaining_run_samples > scaled_maxSize) {
-            capped_samples = scaled_maxSize - rendered_samples;
+        if (rendered_samples + remaining_run_samples > internal_samples_needed) {
+            capped_samples = internal_samples_needed - rendered_samples;
         }
         channel.runs_i_sample += capped_samples;
         samplevalue write_value = channel.muted ? 0 : run.value;
@@ -96,7 +99,7 @@ void Generator::mix_channels(qint64 size) {
 }
 
 size_t Generator::resample_soxr(float out[], size_t in_size) {
-    size_t out_size = (size_t)(in_size * this->output_rate / 1789773.0 + 0.5);
+    size_t out_size = std::round(in_size / this->sample_rate_ratio);
     size_t idone, odone;
     soxr_error_t error = soxr_process(this->soxr,
         this->mixed_buffer, in_size, &idone,
@@ -121,26 +124,26 @@ bool Generator::seek_sample(qint64 sample_position) {
         this->channels[channel_i].runs_i = i;
         this->channels[channel_i].runs_i_sample = sample_position - running_total;
     }
-    double rate_ratio = this->output_rate / 1789773.0;
-    qint64 byte_position = sample_position * rate_ratio * sizeof(float);
+    qint64 byte_position = sample_position / this->sample_rate_ratio * sizeof(float);
     this->seek(byte_position);
     return true;
 }
 
 qint64 Generator::readData(char *data, qint64 maxSize) {
-    qint64 actual_size = 0;
+    qint64 output_samples_requested = maxSize / sizeof(float);
+    qint64 internal_samples_generated = 0;
     for (Channel &channel: this->channels) {
-        actual_size = this->render_runs(channel, maxSize / sizeof(float));
-        // TODO: Should probably check to make sure all the actual sizes are the same.
+        internal_samples_generated = this->render_runs(channel, output_samples_requested);
+        // TODO: Should probably check to make sure all the sizes are the same.
     }
     if (this->mixed_buffer == nullptr) {
-        this->mixed_buffer = new float[actual_size];
+        this->mixed_buffer = new float[internal_samples_generated];
     }
-    this->mix_channels(actual_size);
+    this->mix_channels(internal_samples_generated);
     if (this->downsampled_buffer == nullptr) {
-        this->downsampled_buffer = new float[(size_t)(actual_size * this->output_rate / 1789773.0 + 0.5)];
+        this->downsampled_buffer = new float[output_samples_requested];
     }
-    size_t bytes = sizeof(float) * this->resample_soxr(downsampled_buffer, actual_size);
+    size_t bytes = sizeof(float) * this->resample_soxr(downsampled_buffer, internal_samples_generated);
     memcpy(data, downsampled_buffer, bytes);
     emit this->positionChanged(this->pos());
     return bytes;
