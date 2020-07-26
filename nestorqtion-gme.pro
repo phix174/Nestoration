@@ -1,2 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS = src
+SUBDIRS = libgme \
+    src
+src.depends = libgme
