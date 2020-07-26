@@ -16,8 +16,14 @@ AudioFile::AudioFile(QObject *parent)
     this->channel2 = new ChannelModel;
 }
 
-void AudioFile::open(const char *file_name)
+void AudioFile::open(QString file_name)
 {
+    if (file_name == "") {
+        return;
+    }
+    if (this->is_open) {
+        this->close();
+    }
     struct archive_entry *entry;
     int result;
     WAVheader header;
@@ -25,10 +31,9 @@ void AudioFile::open(const char *file_name)
     archive_read_support_filter_gzip(m_archive);
     archive_read_support_filter_xz(m_archive);
     archive_read_support_format_raw(m_archive);
-    result = archive_read_open_filename(m_archive, file_name, 1048576);
+    result = archive_read_open_filename(m_archive, qPrintable(file_name), 1048576);
     if (result != ARCHIVE_OK) {
         qDebug() << archive_error_string(m_archive);
-        throw 1;
     }
     if (archive_read_next_header(m_archive, &entry) == ARCHIVE_OK) {
         archive_read_data(m_archive, &header, 44);
@@ -36,8 +41,8 @@ void AudioFile::open(const char *file_name)
         if (header.num_channels != 5) throw 3;
         if (header.sample_rate != 1789773) throw 3;
         if (header.bits_per_sample != 8) throw 3;
+        this->is_open = true;
     }
-    this->is_open = true;
 }
 
 void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
@@ -47,55 +52,12 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 void AudioFile::openClicked()
 {
     QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a gzipped 5-channel WAV file", QString(), "Compressed WAV (*.wav.gz *.wav.xz)");
-    if (file_name == "") {
-        return;
-    }
+    this->open(qPrintable(file_name));
     if (this->is_open) {
-        this->close();
+        qDebug() << "Reading runs...";
+        this->read_runs();
+        this->process_runs();
     }
-    try {
-        this->open(qPrintable(file_name));
-    } catch (int e) {
-        qDebug() << "Failed to open WAV file.";
-        return;
-    }
-    qDebug() << "Reading runs...";
-    this->read_runs();
-    qDebug() << "Converting runs to cycles...";
-    this->highest_tone = -999;
-    this->lowest_tone = 999;
-    for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
-        switch (channel_i) {
-            case 0:
-            case 1: {
-                QVector<Cycle> cycles = this->square_channels[channel_i].runs_to_cycles(this->channel_runs[channel_i]);
-                QVector<ToneObject> tones { this->square_channels[channel_i].find_tones(cycles) };
-                this->square_channels[channel_i].fix_transitional_tones(tones);
-                this->square_channels[channel_i].fix_trailing_tones(tones);
-                this->square_channels[channel_i].fix_leading_tones(tones);
-                if (channel_i == 0) {
-                    this->channel0->set_tones(tones);
-                    emit this->channel0Changed(this->channel0);
-                    this->determine_range(tones);
-                } else if (channel_i == 1) {
-                    this->channel1->set_tones(tones);
-                    emit this->channel1Changed(this->channel1);
-                    this->determine_range(tones);
-                    break;
-                }            }
-            break;
-            case 2:
-                QVector<Cycle> cycles = this->triangle_channel.runs_to_cycles(this->channel_runs[channel_i]);
-                QVector<ToneObject> tones { this->triangle_channel.find_tones(cycles) };
-                this->channel2->set_tones(tones);
-                emit this->channel2Changed(this->channel2);
-                this->determine_range(tones);
-            break;
-        }
-    }
-    emit this->lowestToneChanged(this->lowest_tone);
-    emit this->highestToneChanged(this->highest_tone);
-    emit this->channelRunsChanged(this->channel_runs);
 }
 
 void AudioFile::read_runs() {
@@ -154,6 +116,44 @@ void AudioFile::read_runs() {
     }
     delete[] block;
     this->close();
+}
+
+void AudioFile::process_runs() {
+    qDebug() << "Converting runs to cycles...";
+    this->highest_tone = -999;
+    this->lowest_tone = 999;
+    for (uint8_t channel_i = 0; channel_i < 5; channel_i += 1) {
+        switch (channel_i) {
+            case 0:
+            case 1: {
+                QVector<Cycle> cycles = this->square_channels[channel_i].runs_to_cycles(this->channel_runs[channel_i]);
+                QVector<ToneObject> tones { this->square_channels[channel_i].find_tones(cycles) };
+                this->square_channels[channel_i].fix_transitional_tones(tones);
+                this->square_channels[channel_i].fix_trailing_tones(tones);
+                this->square_channels[channel_i].fix_leading_tones(tones);
+                if (channel_i == 0) {
+                    this->channel0->set_tones(tones);
+                    emit this->channel0Changed(this->channel0);
+                    this->determine_range(tones);
+                } else if (channel_i == 1) {
+                    this->channel1->set_tones(tones);
+                    emit this->channel1Changed(this->channel1);
+                    this->determine_range(tones);
+                    break;
+                }            }
+            break;
+            case 2:
+                QVector<Cycle> cycles = this->triangle_channel.runs_to_cycles(this->channel_runs[channel_i]);
+                QVector<ToneObject> tones { this->triangle_channel.find_tones(cycles) };
+                this->channel2->set_tones(tones);
+                emit this->channel2Changed(this->channel2);
+                this->determine_range(tones);
+            break;
+        }
+    }
+    emit this->lowestToneChanged(this->lowest_tone);
+    emit this->highestToneChanged(this->highest_tone);
+    emit this->channelRunsChanged(this->channel_runs);
 }
 
 void AudioFile::determine_range(QVector<ToneObject> &tones) {

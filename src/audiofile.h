@@ -38,10 +38,11 @@ class AudioFile : public QObject
 public:
     explicit AudioFile(QObject *parent = 0);
 
-    void open(const char *file_name);
+    void open(QString file_name);
     void read_block(char block[], std::streamsize &bytes_read);
     void close();
     void read_runs();
+    void process_runs();
     void determine_range(QVector<ToneObject> &tones);
 
 public slots:
