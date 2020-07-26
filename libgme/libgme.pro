@@ -20,6 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 DEFINES += LIBGME_VISIBILITY
 DEFINES += BLARGG_BUILD_DLL
+DEFINES += GME_DISABLE_STEREO_DEPTH
 DEFINES += USE_GME_NSF
 DEFINES += USE_GME_NSFE
 
@@ -31,7 +32,6 @@ HEADERS += gme/blargg_common.h \
            gme/Blip_Buffer.h \
            gme/Classic_Emu.h \
            gme/Data_Reader.h \
-           gme/Effects_Buffer.h \
            gme/gme.h \
            gme/Gme_File.h \
            gme/M3u_Playlist.h \
@@ -49,7 +49,6 @@ HEADERS += gme/blargg_common.h \
 SOURCES += gme/Blip_Buffer.cpp \
            gme/Classic_Emu.cpp \
            gme/Data_Reader.cpp \
-           gme/Effects_Buffer.cpp \
            gme/gme.cpp \
            gme/Gme_File.cpp \
            gme/M3u_Playlist.cpp \
