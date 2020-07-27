@@ -43,6 +43,9 @@ void AudioFile::open(QString file_name)
         if (header.bits_per_sample != 8) throw 3;
         this->is_open = true;
     }
+    if (!this->is_open) {
+        this->close();
+    }
 }
 
 void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
@@ -51,8 +54,8 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 
 void AudioFile::openClicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a gzipped 5-channel WAV file", QString(), "Compressed WAV (*.wav.gz *.wav.xz)");
-    this->open(qPrintable(file_name));
+    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a NES music file", QString(), this->file_types);
+    this->open(file_name);
     if (this->is_open) {
         qDebug() << "Reading runs...";
         this->read_runs();

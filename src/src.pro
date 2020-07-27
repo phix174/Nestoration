@@ -25,6 +25,7 @@ SOURCES += \
         channelmodel.cpp \
         generator.cpp \
         main.cpp \
+        nsfaudiofile.cpp \
         player.cpp \
         squarechannel.cpp \
         toneobject.cpp \
@@ -47,6 +48,7 @@ HEADERS += \
     audiofile.h \
     channelmodel.h \
     generator.h \
+    nsfaudiofile.h \
     player.h \
     squarechannel.h \
     toneobject.h \

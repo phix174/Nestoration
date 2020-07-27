@@ -38,7 +38,7 @@ class AudioFile : public QObject
 public:
     explicit AudioFile(QObject *parent = 0);
 
-    void open(QString file_name);
+    virtual void open(QString file_name);
     void read_block(char block[], std::streamsize &bytes_read);
     void close();
     void read_runs();
@@ -56,8 +56,11 @@ signals:
     void highestToneChanged(int highest_tone);
     void channelRunsChanged(QList<QList<Run>> channel_runs);
 
-private:
+protected:
+    QString file_types { "Compressed WAV (*.wav.gz *.wav.xz)" };
     bool is_open = false;
+
+private:
     struct archive *m_archive;
     ChannelModel *channel0;
     ChannelModel *channel1;
