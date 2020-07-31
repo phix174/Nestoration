@@ -6,8 +6,16 @@
 
 #include "blargg_common.h"
 
+#include <QList>
+
 typedef blargg_long nes_time_t; // CPU clock cycle count
 typedef unsigned nes_addr_t; // 16-bit memory address
+
+struct apu_log_t {
+	long long cpu_cycle;
+	nes_addr_t address;
+	char data;
+};
 
 #include "Nes_Oscs.h"
 
@@ -93,6 +101,8 @@ public:
 	// Run DMC until specified time, so that any DMC memory reads can be
 	// accounted for (i.e. inserting CPU wait states).
 	void run_until( nes_time_t );
+
+	QList<apu_log_t> apu_log;
 	
 public:
 	Nes_Apu();
@@ -123,6 +133,7 @@ private:
 	int frame_period;
 	int frame_delay; // cycles until frame counter runs next
 	int frame; // current frame (0-3)
+	int total_frames;
 	int osc_enables;
 	int frame_mode;
 	bool irq_flag;

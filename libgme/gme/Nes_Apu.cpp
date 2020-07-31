@@ -97,6 +97,8 @@ void Nes_Apu::reset( bool pal_mode, int initial_dmc_dac )
 	dmc.reset();
 	
 	last_time = 0;
+	total_frames = 0;
+	apu_log.clear();
 	last_dmc_time = 0;
 	osc_enables = 0;
 	irq_flag = false;
@@ -269,6 +271,7 @@ void Nes_Apu::end_frame( nes_time_t end_time )
 		if ( earliest_irq_ < 0 )
 			earliest_irq_ = 0;
 	}
+	total_frames += 1;
 }
 
 // registers
@@ -288,6 +291,8 @@ void Nes_Apu::write_register( nes_time_t time, nes_addr_t addr, int data )
 	// Ignore addresses outside range
 	if ( unsigned (addr - start_addr) > end_addr - start_addr )
 		return;
+
+	apu_log.append({ total_frames * 89488 + time, addr, static_cast<char>(data)});
 	
 	run_until_( time );
 	
