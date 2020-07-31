@@ -13,7 +13,7 @@ Rectangle {
                mainrow.height;
            }
     color: if (model.shape === sHAPE_NONE) {
-               "#22000000"
+               "#000000"
            } else if (model.shape === sHAPE_SQUARE_EIGHTH) {
                "#00cc00"
            } else if (model.shape === sHAPE_SQUARE_QUARTER) {
@@ -30,14 +30,17 @@ Rectangle {
                "#ff9900"
            }
     z: if (model.shape === sHAPE_IRREGULAR || model.shape === sHAPE_FIXED) { 1 } else { 0 }
+    opacity: (model.volume + 2) / 18.0
 
     MouseArea {
         anchors.fill: parent
         onClicked: {
             input_nes_timer.text = model.nes_timer
-            input_length.text = model.length
             input_name.text = model.name
             input_semitone_id.text = Math.round(model.semitone_id * 1000) / 1000
+            input_start.text = model.start
+            input_length.text = model.length
+            input_volume.text = model.volume
             input_shape.text = [
                     "Flat",
                     "Square 1/8",
@@ -54,5 +57,6 @@ Rectangle {
         height: parent.height
         color: parent.color
         visible: if (model.shape === sHAPE_NONE) { false } else { true }
+        opacity: 1;
     }
 }

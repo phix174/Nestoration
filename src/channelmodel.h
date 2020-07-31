@@ -19,7 +19,9 @@ public:
         SemiToneIdRole = Qt::UserRole +1,
         NesTimerRole,
         ShapeRole,
+        StartRole,
         LengthRole,
+        VolumeRole,
         NameRole
     };
 

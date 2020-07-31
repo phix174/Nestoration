@@ -145,7 +145,6 @@ ApplicationWindow {
 
                                 Label { text: "NES Timer:"; color: "#ffffff" }
                                 TextInput { id: input_nes_timer; color: "#ffffff"; readOnly: true }
-
                                 Label { text: "Note:"; color: "#ffffff" }
                                 TextInput { id: input_name; color: "#ffffff"; readOnly: true }
                                 Label { text: "MIDI Note:"; color: "#ffffff" }
@@ -154,10 +153,18 @@ ApplicationWindow {
                             GridLayout {
                                 columns: 2
 
-                                Label { text: "Length (samples):"; color: "#ffffff" }
+                                Label { text: "Start:"; color: "#ffffff" }
+                                TextInput { id: input_start; color: "#ffffff" }
+                                Label { text: "Length:"; color: "#ffffff" }
                                 TextInput { id: input_length; color: "#ffffff" }
                                 Label { text: "Shape:"; color: "#ffffff" }
                                 TextInput { id: input_shape; color: "#ffffff" }
+                            }
+                            GridLayout {
+                                columns: 2
+
+                                Label { text: "Volume:"; color: "#ffffff" }
+                                TextInput { id: input_volume; color: "#ffffff" }
                             }
                         }
                     }
