@@ -126,9 +126,9 @@ void NsfAudioFile::read_runs() {
     bool has_previous = false;
     bool new_tone = false;
     for (const apu_log_t &entry: apu->apu_log) {
-        //qDebug() << entry.cpu_cycle;
         miniapu.write(entry.address, entry.data);
         sq1tone.semitone_id = miniapu.square0.midi_note();
+        sq1tone.nes_timer = miniapu.square0.timer_whole();
         sq1tone.volume = miniapu.square0.out_volume();
         sq1tone.shape = sq1tone.volume ? miniapu.square0.duty() + 1 : CycleShape::None;
         if (has_previous) {
@@ -138,8 +138,15 @@ void NsfAudioFile::read_runs() {
                     || sq1tone.volume != previous.volume) {
                 sq1tone.start = entry.cpu_cycle;
                 previous.length = sq1tone.start - previous.start;
+                if (previous.length == 0) {
+                    // If the current tone and the previous tone started on the same CPU cycle
+                    // (such as cycle 0), then replace the previous tone with the current tone.
+                    qDebug() << "Deleting length-0 tone";
+                    tones.removeLast();
+                } else {
+                    qDebug() << previous.start << previous.length << previous.semitone_id << previous.volume;
+                }
                 new_tone = true;
-                qDebug() << previous.start << previous.length << previous.semitone_id << previous.volume;
             }
         }
         if (new_tone || !has_previous) {
@@ -149,7 +156,8 @@ void NsfAudioFile::read_runs() {
             new_tone = false;
         }
     }
-    qDebug() << tones.last().start << tones.last().length << tones.last().semitone_id << tones.last().volume;
+    // Discard the last tone because we don't know how long it is.
+    tones.removeLast();
     this->channel0->set_tones(tones);
     emit this->channel0Changed(this->channel0);
     this->highest_tone = -999;
