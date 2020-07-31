@@ -54,14 +54,14 @@ double TriangleRegisters::midi_note() {
 
 bool MiniApu::write(short address, char data) {
     if (0x4000 <= address && address < 0x4004)
-        return this->square0.write(address - 0x4000, data);
+        return this->squares[0].write(address - 0x4000, data);
     if (0x4004 <= address && address < 0x4008)
-        return this->square1.write(address - 0x4004, data);
+        return this->squares[1].write(address - 0x4004, data);
     if (0x4008 <= address && address < 0x400c)
         return this->triangle.write(address - 0x4008, data);
     if (address == 0x4015) {
-        this->square0.enabled = data & 0x01;
-        this->square1.enabled = data & 0x02;
+        this->squares[0].enabled = data & 0x01;
+        this->squares[1].enabled = data & 0x02;
         this->triangle.enabled = data & 0x04;
     }
     return false;
@@ -120,49 +120,68 @@ void NsfAudioFile::read_runs() {
     delete[] buf;
     Nes_Apu *apu = static_cast<Nsf_Emu*>(this->emu)->apu_();
     MiniApu miniapu;
-    ToneObject sq1tone;
-    sq1tone.start = apu->apu_log.first().cpu_cycle;
-    QVector<ToneObject> tones;
-    bool has_previous = false;
-    bool new_tone = false;
+    QVector<ToneObject> tones[3];
+    bool has_previous[3] { false, false, false };
+    bool new_tone[3] { false, false, false };
+    ToneObject tone[3];
+    for (int channel_i = 0; channel_i < 3; channel_i += 1) {
+        tone[channel_i].start = apu->apu_log.first().cpu_cycle;
+    }
     for (const apu_log_t &entry: apu->apu_log) {
         miniapu.write(entry.address, entry.data);
-        sq1tone.semitone_id = miniapu.square0.midi_note();
-        sq1tone.nes_timer = miniapu.square0.timer_whole();
-        sq1tone.volume = miniapu.square0.out_volume();
-        sq1tone.shape = sq1tone.volume ? miniapu.square0.duty() + 1 : CycleShape::None;
-        if (has_previous) {
-            ToneObject &previous = tones.last();
-            if (sq1tone.semitone_id != previous.semitone_id
-                    || sq1tone.shape != previous.shape
-                    || sq1tone.volume != previous.volume) {
-                sq1tone.start = entry.cpu_cycle;
-                previous.length = sq1tone.start - previous.start;
-                if (previous.length == 0) {
-                    // If the current tone and the previous tone started on the same CPU cycle
-                    // (such as cycle 0), then replace the previous tone with the current tone.
-                    qDebug() << "Deleting length-0 tone";
-                    tones.removeLast();
-                } else {
-                    qDebug() << previous.start << previous.length << previous.semitone_id << previous.volume;
-                }
-                new_tone = true;
+        for (int channel_i = 0; channel_i < 3; channel_i += 1) {
+            if (channel_i < 2) {
+                tone[channel_i].semitone_id = miniapu.squares[channel_i].midi_note();
+                tone[channel_i].nes_timer = miniapu.squares[channel_i].timer_whole();
+                tone[channel_i].volume = miniapu.squares[channel_i].out_volume();
+                tone[channel_i].shape = tone[channel_i].volume ? miniapu.squares[channel_i].duty() + 1 : CycleShape::None;
+            } else {
+                tone[channel_i].semitone_id = miniapu.triangle.midi_note();
+                tone[channel_i].nes_timer = miniapu.triangle.timer_whole();
+                tone[channel_i].volume = tone[channel_i].nes_timer > 2 ? 15 : 0;
+                tone[channel_i].shape = tone[channel_i].volume ? CycleShape::Triangle : CycleShape::None;
             }
-        }
-        if (new_tone || !has_previous) {
-            tones.append(sq1tone);
-            sq1tone = ToneObject {};
-            has_previous = true;
-            new_tone = false;
+            if (has_previous[channel_i]) {
+                ToneObject &previous = tones[channel_i].last();
+                if (tone[channel_i].semitone_id != previous.semitone_id
+                        || tone[channel_i].shape != previous.shape
+                        || tone[channel_i].volume != previous.volume) {
+                    tone[channel_i].start = entry.cpu_cycle;
+                    previous.length = tone[channel_i].start - previous.start;
+                    if (previous.length == 0) {
+                        // If the current tone and the previous tone started on the same CPU cycle
+                        // (such as cycle 0), then replace the previous tone with the current tone.
+                        qDebug() << "Deleting length-0 tone";
+                        tones[channel_i].removeLast();
+                    } else {
+                        qDebug() << previous.start << previous.length << previous.semitone_id << previous.volume;
+                    }
+                    new_tone[channel_i] = true;
+                }
+            }
+            if (new_tone[channel_i] || !has_previous[channel_i]) {
+                tones[channel_i].append(tone[channel_i]);
+                tone[channel_i] = ToneObject {};
+                has_previous[channel_i] = true;
+                new_tone[channel_i] = false;
+            }
         }
     }
     // Discard the last tone because we don't know how long it is.
-    tones.removeLast();
-    this->channel0->set_tones(tones);
+    tones[0].removeLast();
+    tones[1].removeLast();
+    tones[2].removeLast();
+    this->channel0->set_tones(tones[0]);
+    this->channel1->set_tones(tones[1]);
+    this->channel2->set_tones(tones[2]);
     emit this->channel0Changed(this->channel0);
+    emit this->channel1Changed(this->channel1);
+    emit this->channel2Changed(this->channel2);
     this->highest_tone = -999;
     this->lowest_tone = 999;
-    this->determine_range(tones);
+    this->determine_range(tones[0]);
+    this->determine_range(tones[1]);
+    this->determine_range(tones[2]);
     emit this->lowestToneChanged(this->lowest_tone);
     emit this->highestToneChanged(this->highest_tone);
 }

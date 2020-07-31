@@ -45,8 +45,7 @@ public:
 
 class MiniApu {
 public:
-    SquareRegisters square0;
-    SquareRegisters square1;
+    SquareRegisters squares[2];
     TriangleRegisters triangle;
     bool write(short address, char data);
 };
