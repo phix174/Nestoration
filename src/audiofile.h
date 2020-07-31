@@ -41,8 +41,8 @@ public:
     virtual void open(QString file_name);
     void read_block(char block[], std::streamsize &bytes_read);
     void close();
-    void read_runs();
-    void process_runs();
+    virtual void read_runs();
+    virtual void process_runs();
     void determine_range(QVector<ToneObject> &tones);
 
 public slots:
@@ -59,17 +59,17 @@ signals:
 protected:
     QString file_types { "Compressed WAV (*.wav.gz *.wav.xz)" };
     bool is_open = false;
-
-private:
-    struct archive *m_archive;
     ChannelModel *channel0;
     ChannelModel *channel1;
     ChannelModel *channel2;
+    int lowest_tone;
+    int highest_tone;
+
+private:
+    struct archive *m_archive;
     QList<QList<Run>> channel_runs;
     SquareChannel square_channels[2];
     TriangleChannel triangle_channel;
-    int lowest_tone;
-    int highest_tone;
 };
 
 /*

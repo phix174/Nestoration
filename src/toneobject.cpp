@@ -6,14 +6,18 @@ ToneObject::ToneObject()
 {
     this->semitone_id = -999;
     this->shape = CycleShape::Irregular;
+    this->start = 0;
     this->length = 0;
+    this->volume = 0;
     this->cycles = {};
 }
 
 ToneObject::ToneObject(const double &semitone_id, qint16 nes_timer, const short int &shape)
     : semitone_id(semitone_id), nes_timer(nes_timer), shape(shape)
 {
+    this->start = 0;
     this->length = 0;
+    this->volume = 0;
     this->cycles = {};
 }
 

@@ -54,7 +54,8 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 
 void AudioFile::openClicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a NES music file", QString(), this->file_types);
+    //QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a NES music file", QString(), this->file_types);
+    QString file_name = "/home/don/storage/audio/emu/nes/Disney's DuckTales (Released Version) (NTSC) (SFX).nsf";
     this->open(file_name);
     if (this->is_open) {
         qDebug() << "Reading runs...";
@@ -161,7 +162,7 @@ void AudioFile::process_runs() {
 
 void AudioFile::determine_range(QVector<ToneObject> &tones) {
     for (ToneObject &tone: tones) {
-        if (tone.shape == CycleShape::Irregular || tone.semitone_id < 0) {
+        if (tone.shape == CycleShape::Irregular || tone.semitone_id < 0 || tone.volume == 0) {
             continue;
         }
         if (ceil(tone.semitone_id) > this->highest_tone) {

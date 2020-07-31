@@ -73,7 +73,9 @@ public:
     double semitone_id;
     qint16 nes_timer;
     short int shape;
+    sampleoff start;
     samplesize length;
+    samplevalue volume;
     QVector<Cycle> cycles;
 
     QString name() const;

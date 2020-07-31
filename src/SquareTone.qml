@@ -1,13 +1,13 @@
 import QtQuick 2.0
 
 Rectangle {
-    y: if (audiofile.lowestTone <= model.semitone_id && model.semitone_id <= audiofile.highestTone) {
+    y: if (audiofile.lowestTone <= model.semitone_id && model.semitone_id <= audiofile.highestTone && model.shape !== sHAPE_NONE) {
            (paddedHighestTone - model.semitone_id) * noteHeight
        } else {
            0
        }
     width: model.length
-    height: if (model.semitone_id > -999) {
+    height: if (model.semitone_id > -999 && model.shape !== sHAPE_NONE) {
                noteHeight - noteSpacing;
            } else {
                mainrow.height;
