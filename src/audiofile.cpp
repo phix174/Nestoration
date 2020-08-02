@@ -54,8 +54,9 @@ void AudioFile::read_block(char block[], std::streamsize &bytes_read) {
 
 void AudioFile::openClicked()
 {
-    //QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a NES music file", QString(), this->file_types);
-    QString file_name = "/home/don/storage/audio/emu/nes/Disney's DuckTales (Released Version) (NTSC) (SFX).nsf";
+    QString nes_dir = QDir::homePath() + QString("/storage/audio/emu/nes");
+    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a NES music file", nes_dir, this->file_types);
+    //QString file_name = QDir::homePath() + QString("/storage/audio/emu/nes/Disney's DuckTales (Released Version) (NTSC) (SFX).nsf");
     this->open(file_name);
     if (this->is_open) {
         qDebug() << "Reading runs...";
