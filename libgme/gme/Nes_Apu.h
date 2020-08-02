@@ -11,10 +11,17 @@
 typedef blargg_long nes_time_t; // CPU clock cycle count
 typedef unsigned nes_addr_t; // 16-bit memory address
 
+enum apu_log_event {
+	register_write,
+	timeout
+};
+
 struct apu_log_t {
 	long long cpu_cycle;
-	nes_addr_t address;
-	char data;
+	apu_log_event event;
+	nes_addr_t address = 0;
+	char data = 0;
+	char channel = 0;
 };
 
 #include "Nes_Oscs.h"
@@ -133,7 +140,9 @@ private:
 	int frame_period;
 	int frame_delay; // cycles until frame counter runs next
 	int frame; // current frame (0-3)
-	int total_frames;
+	// Reminder: the following timeframes are twentieths of a second, as dictated by Classic_Emu::set_sample_rate_
+	// and are not related the the APU's "frame counter".
+	int past_timeframe_cycles;
 	int osc_enables;
 	int frame_mode;
 	bool irq_flag;

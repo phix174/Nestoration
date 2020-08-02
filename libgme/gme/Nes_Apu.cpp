@@ -97,7 +97,7 @@ void Nes_Apu::reset( bool pal_mode, int initial_dmc_dac )
 	dmc.reset();
 	
 	last_time = 0;
-	total_frames = 0;
+	past_timeframe_cycles = 0;
 	apu_log.clear();
 	last_dmc_time = 0;
 	osc_enables = 0;
@@ -181,6 +181,7 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 		
 		// take frame-specific actions
 		frame_delay = frame_period;
+		int old_square1_length_counter = square1.length_counter;
 		switch ( frame++ )
 		{
 			case 0:
@@ -195,6 +196,14 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 				square2.clock_length( 0x20 );
 				noise.clock_length( 0x20 );
 				triangle.clock_length( 0x80 ); // different bit for halt flag on triangle
+				if ((square1.regs[0] & 0x20) && old_square1_length_counter > 0 && square1.length_counter <= 0) {
+					apu_log_t entry {
+						past_timeframe_cycles + time,
+						apu_log_event::timeout
+					};
+					entry.channel = 0;
+					apu_log.append(entry);
+				}
 				
 				square1.clock_sweep( -1 );
 				square2.clock_sweep( 0 );
@@ -239,8 +248,10 @@ inline void zero_apu_osc( T* osc, nes_time_t time )
 
 void Nes_Apu::end_frame( nes_time_t end_time )
 {
-	if ( end_time > last_time )
+	if ( end_time > last_time ) {
 		run_until_( end_time );
+		past_timeframe_cycles += end_time;
+	}
 	
 	if ( dmc.nonlinear )
 	{
@@ -271,7 +282,6 @@ void Nes_Apu::end_frame( nes_time_t end_time )
 		if ( earliest_irq_ < 0 )
 			earliest_irq_ = 0;
 	}
-	total_frames += 1;
 }
 
 // registers
@@ -292,7 +302,13 @@ void Nes_Apu::write_register( nes_time_t time, nes_addr_t addr, int data )
 	if ( unsigned (addr - start_addr) > end_addr - start_addr )
 		return;
 
-	apu_log.append({ total_frames * 89488 + time, addr, static_cast<char>(data)});
+	apu_log_t entry {
+		past_timeframe_cycles + time,
+		apu_log_event::register_write
+	};
+	entry.address = addr;
+	entry.data = static_cast<char>(data);
+	apu_log.append(entry);
 	
 	run_until_( time );
 	

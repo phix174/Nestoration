@@ -47,6 +47,7 @@ class MiniApu {
 public:
     SquareRegisters squares[2];
     TriangleRegisters triangle;
+    char framecounter_mode;
     bool write(short address, char data);
 };
 

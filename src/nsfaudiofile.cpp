@@ -53,8 +53,20 @@ double TriangleRegisters::midi_note() {
 }
 
 bool MiniApu::write(short address, char data) {
-    if (0x4000 <= address && address < 0x4004)
-        return this->squares[0].write(address - 0x4000, data);
+    bool had_sweep = this->squares[0].sweep_enabled();
+    if (0x4000 <= address && address < 0x4004) {
+        this->squares[0].write(address - 0x4000, data);
+        bool has_sweep = this->squares[0].sweep_enabled();
+        if (!had_sweep && has_sweep) {
+            qDebug() << "Sweep Enabled"
+                     << this->squares[0].sweep_negate()
+                     << this->squares[0].sweep_shift()
+                     << this->squares[0].sweep_period();
+        }
+        if (had_sweep && !has_sweep) {
+            qDebug() << "Sweep Disabled";
+        }
+    }
     if (0x4004 <= address && address < 0x4008)
         return this->squares[1].write(address - 0x4004, data);
     if (0x4008 <= address && address < 0x400c)
@@ -63,6 +75,10 @@ bool MiniApu::write(short address, char data) {
         this->squares[0].enabled = data & 0x01;
         this->squares[1].enabled = data & 0x02;
         this->triangle.enabled = data & 0x04;
+    }
+    if (address == 0x4017) {
+        this->framecounter_mode = (data >> 7) & 0x01;
+        qDebug() << "Frame counter mode set to:" << QString::number(this->framecounter_mode);
     }
     return false;
 }
@@ -127,8 +143,16 @@ void NsfAudioFile::read_runs() {
     for (int channel_i = 0; channel_i < 3; channel_i += 1) {
         tone[channel_i].start = apu->apu_log.first().cpu_cycle;
     }
+    bool prev_sweep_enabled = miniapu.squares[0].sweep_enabled();
+    bool prev_sweep_negate = miniapu.squares[0].sweep_negate();
+    int prev_sweep_shift = miniapu.squares[0].sweep_shift();
+    int prev_sweep_period = miniapu.squares[0].sweep_period();
     for (const apu_log_t &entry: apu->apu_log) {
-        miniapu.write(entry.address, entry.data);
+        if (entry.event == apu_log_event::register_write) {
+            miniapu.write(entry.address, entry.data);
+        } else {
+            qDebug() << "Channel 0 timed out at" << entry.cpu_cycle;
+        }
         for (int channel_i = 0; channel_i < 3; channel_i += 1) {
             if (channel_i < 2) {
                 tone[channel_i].semitone_id = miniapu.squares[channel_i].midi_note();
@@ -154,14 +178,34 @@ void NsfAudioFile::read_runs() {
                         qDebug() << "Deleting length-0 tone";
                         tones[channel_i].removeLast();
                     } else {
-                        qDebug() << previous.start << previous.length << previous.semitone_id << previous.volume;
+                        //qDebug() << previous.start << previous.length << previous.semitone_id << previous.volume;
                     }
                     new_tone[channel_i] = true;
+                    if (channel_i == 0 && prev_sweep_enabled) {
+                        int half_frame = (miniapu.framecounter_mode == 1 ? 37282 : 29830) / 2;
+                        int sweep_steps = previous.length / half_frame;
+                        qDebug() << "Sweep steps:" << previous.length << "/" << half_frame;
+                        int start_nes_timer = previous.nes_timer;
+                        int end_nes_timer = start_nes_timer;
+                        for (int i=0; i<sweep_steps; i++) {
+                            int change_factor = end_nes_timer >> prev_sweep_shift;
+                            qDebug() << "Change factor:" << end_nes_timer << ">>" << prev_sweep_shift;
+                            if (prev_sweep_negate) {
+                                change_factor = -1 - change_factor;
+                            }
+                            end_nes_timer += change_factor;
+                        }
+                        qDebug() << "Sweep from" << start_nes_timer << "to" << end_nes_timer;
+                    }
                 }
             }
             if (new_tone[channel_i] || !has_previous[channel_i]) {
                 tones[channel_i].append(tone[channel_i]);
                 tone[channel_i] = ToneObject {};
+                prev_sweep_enabled = miniapu.squares[0].sweep_enabled();
+                prev_sweep_negate = miniapu.squares[0].sweep_negate();
+                prev_sweep_shift = miniapu.squares[0].sweep_shift();
+                prev_sweep_period = miniapu.squares[0].sweep_period();
                 has_previous[channel_i] = true;
                 new_tone[channel_i] = false;
             }
