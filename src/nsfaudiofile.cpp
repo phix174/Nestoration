@@ -177,6 +177,14 @@ void NsfAudioFile::read_runs() {
                         // (such as cycle 0), then replace the previous tone with the current tone.
                         qDebug() << "Deleting length-0 tone";
                         tones[channel_i].removeLast();
+                    } else if (previous.length < 179 && previous.shape != CycleShape::None) {
+                        // If the previous tone was less than 1ms long, it's probably
+                        // the result of multiple register writes that only happened
+                        // at different times because the NES hardware doesn't let you
+                        // write multiple registers simultaneously. Mark these tones
+                        // as irregular.
+                        //qDebug() << "Marking irregular tone";
+                        previous.shape = CycleShape::Irregular;
                     } else {
                         //qDebug() << previous.start << previous.length << previous.semitone_id << previous.volume;
                     }

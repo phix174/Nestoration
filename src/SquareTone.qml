@@ -30,7 +30,7 @@ Rectangle {
                "#ff9900"
            }
     z: if (model.shape === sHAPE_IRREGULAR || model.shape === sHAPE_FIXED) { 1 } else { 0 }
-    opacity: (model.volume + 2) / 17.0
+    opacity: (model.shape === sHAPE_IRREGULAR) ? 1 : (model.volume + 2) / 17.0;
 
     MouseArea {
         anchors.fill: parent
