@@ -182,6 +182,7 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 		// take frame-specific actions
 		frame_delay = frame_period;
 		int old_square1_length_counter = square1.length_counter;
+		int old_square2_length_counter = square2.length_counter;
 		switch ( frame++ )
 		{
 			case 0:
@@ -196,7 +197,7 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 				square2.clock_length( 0x20 );
 				noise.clock_length( 0x20 );
 				triangle.clock_length( 0x80 ); // different bit for halt flag on triangle
-				if ((square1.regs[0] & 0x20) && old_square1_length_counter > 0 && square1.length_counter <= 0) {
+				if (!(square1.regs[0] & 0x20) && old_square1_length_counter > 0 && square1.length_counter <= 0) {
 					apu_log_t entry {
 						past_timeframe_cycles + time,
 						apu_log_event::timeout
@@ -204,7 +205,15 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 					entry.channel = 0;
 					apu_log.append(entry);
 				}
-				
+				if (!(square2.regs[0] & 0x20) && old_square2_length_counter > 0 && square2.length_counter <= 0) {
+					apu_log_t entry {
+						past_timeframe_cycles + time,
+						apu_log_event::timeout
+					};
+					entry.channel = 1;
+					apu_log.append(entry);
+				}
+
 				square1.clock_sweep( -1 );
 				square2.clock_sweep( 0 );
 				

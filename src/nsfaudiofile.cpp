@@ -35,7 +35,7 @@ double SquareRegisters::midi_note() {
 int SquareRegisters::out_volume() {
     bool disabled = !this->enabled;
     bool too_high = this->timer_whole() < 8;
-    if (disabled || too_high) {
+    if (disabled || too_high || this->timed_out) {
         return 0;
     }
     return this->volume();
@@ -53,22 +53,45 @@ double TriangleRegisters::midi_note() {
 }
 
 bool MiniApu::write(short address, char data) {
-    bool had_sweep = this->squares[0].sweep_enabled();
     if (0x4000 <= address && address < 0x4004) {
+        bool had_lch = this->squares[0].counter_halt();
+        bool had_sweep = this->squares[0].sweep_enabled();
         this->squares[0].write(address - 0x4000, data);
+        if (address == 0x4003) {
+            this->squares[0].timed_out = false;
+        }
+        bool has_lch = this->squares[0].counter_halt();
+        if (!had_lch && has_lch) {
+            qDebug() << "Channel 0 length counter halted.";
+        }
+        if (had_lch && !has_lch) {
+            qDebug() << "Channel 0 length counter started.";
+        }
         bool has_sweep = this->squares[0].sweep_enabled();
-        if (!had_sweep && has_sweep) {
+        if (false && !had_sweep && has_sweep) {
             qDebug() << "Sweep Enabled"
                      << this->squares[0].sweep_negate()
                      << this->squares[0].sweep_shift()
                      << this->squares[0].sweep_period();
         }
-        if (had_sweep && !has_sweep) {
+        if (false && had_sweep && !has_sweep) {
             qDebug() << "Sweep Disabled";
         }
     }
-    if (0x4004 <= address && address < 0x4008)
-        return this->squares[1].write(address - 0x4004, data);
+    if (0x4004 <= address && address < 0x4008) {
+        bool had_lch = this->squares[1].counter_halt();
+        this->squares[1].write(address - 0x4004, data);
+        if (address == 0x4007) {
+            this->squares[1].timed_out = false;
+        }
+        bool has_lch = this->squares[1].counter_halt();
+        if (!had_lch && has_lch) {
+            qDebug() << "Channel 1 length counter halted.";
+        }
+        if (had_lch && !has_lch) {
+            qDebug() << "Channel 1 length counter started.";
+        }
+    }
     if (0x4008 <= address && address < 0x400c)
         return this->triangle.write(address - 0x4008, data);
     if (address == 0x4015) {
@@ -78,7 +101,7 @@ bool MiniApu::write(short address, char data) {
     }
     if (address == 0x4017) {
         this->framecounter_mode = (data >> 7) & 0x01;
-        qDebug() << "Frame counter mode set to:" << QString::number(this->framecounter_mode);
+        //qDebug() << "Frame counter mode set to:" << QString::number(this->framecounter_mode);
     }
     return false;
 }
@@ -150,8 +173,8 @@ void NsfAudioFile::read_runs() {
     for (const apu_log_t &entry: apu->apu_log) {
         if (entry.event == apu_log_event::register_write) {
             miniapu.write(entry.address, entry.data);
-        } else {
-            qDebug() << "Channel 0 timed out at" << entry.cpu_cycle;
+        } else if (entry.event == apu_log_event::timeout) {
+            miniapu.squares[static_cast<int>(entry.channel)].timed_out = true;
         }
         for (int channel_i = 0; channel_i < 3; channel_i += 1) {
             if (channel_i < 2) {
@@ -192,18 +215,16 @@ void NsfAudioFile::read_runs() {
                     if (channel_i == 0 && prev_sweep_enabled) {
                         int half_frame = (miniapu.framecounter_mode == 1 ? 37282 : 29830) / 2;
                         int sweep_steps = previous.length / half_frame;
-                        qDebug() << "Sweep steps:" << previous.length << "/" << half_frame;
                         int start_nes_timer = previous.nes_timer;
                         int end_nes_timer = start_nes_timer;
                         for (int i=0; i<sweep_steps; i++) {
                             int change_factor = end_nes_timer >> prev_sweep_shift;
-                            qDebug() << "Change factor:" << end_nes_timer << ">>" << prev_sweep_shift;
                             if (prev_sweep_negate) {
                                 change_factor = -1 - change_factor;
                             }
                             end_nes_timer += change_factor;
                         }
-                        qDebug() << "Sweep from" << start_nes_timer << "to" << end_nes_timer;
+                        //qDebug() << "Sweep from" << start_nes_timer << "to" << end_nes_timer;
                     }
                 }
             }
