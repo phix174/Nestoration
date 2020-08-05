@@ -38,6 +38,7 @@ void NsfAudioFile::open(QString file_name) {
     bool valid_choice = (ok && 0 <= track_num && track_num < track_count);
     if (valid_choice) {
         qDebug() << "Track" << track_num << "selected";
+        gme_enable_accuracy(this->emu, 1);
         gme_err_t start_err = gme_start_track(this->emu, track_num);
         if (!start_err) {
             this->is_open = true;
