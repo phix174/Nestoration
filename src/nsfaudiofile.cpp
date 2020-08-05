@@ -4,7 +4,11 @@
 #include "gme/Nsf_Emu.h"
 
 #include <QDebug>
+#include <QFileDialog>
+#include <QDir>
 #include <QInputDialog>
+
+const int INVALID_TRACK = -1;
 
 NsfAudioFile::NsfAudioFile(QObject *parent)
     : AudioFile(parent)
@@ -17,6 +21,37 @@ NsfAudioFile::~NsfAudioFile()
     gme_delete(this->emu);
 }
 
+void NsfAudioFile::openClicked()
+{
+    QString nes_dir = QDir::homePath() + QString("/storage/audio/emu/nes");
+    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a NES music file", nes_dir, this->file_types);
+    //QString file_name = QDir::homePath() + QString("/storage/audio/emu/nes/Disney's DuckTales (Released Version) (NTSC) (SFX).nsf");
+    this->open(file_name);
+    if (this->is_open) {
+        this->read_gme_buffer();
+        this->convert_apulog_to_runs();
+    }
+}
+
+int NsfAudioFile::choose_track() {
+    int track_count = gme_track_count(this->emu);
+    qDebug() << "Track count:" << track_count;
+    bool ok;
+    QStringList tracks;
+    for (int i = 0; i < track_count; i += 1) {
+        tracks.append(QString::number(i + 1));
+    }
+    QString track_num_str = QInputDialog::getItem(nullptr, tr("Choose a track to open"), tr("Track:"), tracks, 0, false, &ok);
+    if (!ok) {
+        return INVALID_TRACK;
+    }
+    int track_num = track_num_str.toInt() - 1;
+    if (track_num >= track_count) {
+        return INVALID_TRACK;
+    }
+    return track_num;
+}
+
 void NsfAudioFile::open(QString file_name) {
     if (file_name == "") {
         return;
@@ -26,17 +61,8 @@ void NsfAudioFile::open(QString file_name) {
     }
     gme_err_t open_err = gme_open_file(qPrintable(file_name), &this->emu, this->blipbuf_sample_rate);
     qDebug() << open_err;
-    int track_count = gme_track_count(this->emu);
-    qDebug() << "Track count:" << track_count;
-    bool ok;
-    QStringList tracks;
-    for (int i = 0; i < track_count; i += 1) {
-        tracks.append(QString::number(i + 1));
-    }
-    QString track_num_str = QInputDialog::getItem(nullptr, tr("Choose a track to open"), tr("Track:"), tracks, 0, false, &ok);
-    int track_num = track_num_str.toInt() - 1;
-    bool valid_choice = (ok && 0 <= track_num && track_num < track_count);
-    if (valid_choice) {
+    int track_num = this->choose_track();
+    if (track_num != INVALID_TRACK) {
         qDebug() << "Track" << track_num << "selected";
         gme_enable_accuracy(this->emu, 1);
         gme_err_t start_err = gme_start_track(this->emu, track_num);
@@ -52,12 +78,15 @@ void NsfAudioFile::open(QString file_name) {
     }
 }
 
-void NsfAudioFile::read_runs() {
+void NsfAudioFile::read_gme_buffer() {
     const int STEREO = 2;
     const int SECONDS = 100;
     short *buf = new short[this->blipbuf_sample_rate * STEREO * SECONDS];
     gme_play(this->emu, this->blipbuf_sample_rate * STEREO * SECONDS, buf);
     delete[] buf;
+}
+
+void NsfAudioFile::convert_apulog_to_runs() {
     Nes_Apu *apu = static_cast<Nsf_Emu*>(this->emu)->apu_();
     MiniApu miniapu;
     QVector<ToneObject> tones[3];
@@ -158,8 +187,4 @@ void NsfAudioFile::read_runs() {
     this->determine_range(tones[2]);
     emit this->lowestToneChanged(this->lowest_tone);
     emit this->highestToneChanged(this->highest_tone);
-}
-
-void NsfAudioFile::process_runs() {
-    // pass
 }

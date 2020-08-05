@@ -12,9 +12,13 @@ public:
     explicit NsfAudioFile(QObject *parent = 0);
     ~NsfAudioFile();
 
-    void open(QString file_name) override;
-    void read_runs() override;
-    void process_runs() override;
+    int choose_track();
+    void open(QString file_name);
+    void read_gme_buffer();
+    void convert_apulog_to_runs();
+
+public slots:
+    void openClicked();
 
 private:
     Music_Emu *emu;
