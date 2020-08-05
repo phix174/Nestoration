@@ -25,6 +25,7 @@ SOURCES += \
         channelmodel.cpp \
         generator.cpp \
         main.cpp \
+        miniapu.cpp \
         nsfaudiofile.cpp \
         player.cpp \
         squarechannel.cpp \
@@ -48,6 +49,7 @@ HEADERS += \
     audiofile.h \
     channelmodel.h \
     generator.h \
+    miniapu.h \
     nsfaudiofile.h \
     player.h \
     squarechannel.h \
