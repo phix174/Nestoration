@@ -20,6 +20,7 @@ public:
 public slots:
     void setChannels(QList<QList<Run>> channel_runs);
     void setGmeBuffer(const QByteArray gme_array);
+    void handleNotify();
     void handleStateChanged(QAudio::State new_state);
     void handlePositionChanged(qint64 byte_position);
     void seek(qint64 sample_position);
@@ -31,6 +32,7 @@ signals:
     void playerPositionChanged(qint64 byte_position);
 
 private:
+    qreal byte_usec_ratio;
     QAudioOutput *audio;
     Generator *generator;
     qint64 position = 0;

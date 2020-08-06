@@ -108,7 +108,7 @@ Item {
                         property real position_ratio: (1789773.0 / 48000.0) / 4.0
                         height: parent.height
                         width: 1 / global_xScale
-                        x: player.position * position_ratio - 152727.0
+                        x: player.position * position_ratio
                         color: "yellow"
                         visible: true
                     }
@@ -116,6 +116,7 @@ Item {
                     Row {
                         id: mainrow
                         height: parent.height
+                        width: 1789773 * 100 /* TODO: Remove this */
 
                         Repeater {
                             model: mainrepeater_model
