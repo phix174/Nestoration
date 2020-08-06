@@ -9,7 +9,7 @@ class NsfAudioFile : public AudioFile
     Q_OBJECT
 
 public:
-    explicit NsfAudioFile(QObject *parent = 0);
+    explicit NsfAudioFile(int sample_rate, QObject *parent = 0);
     ~NsfAudioFile();
 
     int choose_track();
@@ -17,12 +17,15 @@ public:
     void read_gme_buffer();
     void convert_apulog_to_runs();
 
+signals:
+    void GmeBufferChanged(const QByteArray gme_buffer);
+
 public slots:
     void openClicked();
 
 private:
     Music_Emu *emu;
-    const int blipbuf_sample_rate = 6300;
+    const int blipbuf_sample_rate;
 };
 
 #endif // NSFAUDIOFILE_H

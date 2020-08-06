@@ -10,8 +10,8 @@
 
 const int INVALID_TRACK = -1;
 
-NsfAudioFile::NsfAudioFile(QObject *parent)
-    : AudioFile(parent)
+NsfAudioFile::NsfAudioFile(int sample_rate, QObject *parent)
+    : AudioFile(parent), blipbuf_sample_rate(sample_rate)
 {
     file_types = "NSF/NSFe (*.nsf *.nsfe)";
 }
@@ -81,9 +81,13 @@ void NsfAudioFile::open(QString file_name) {
 void NsfAudioFile::read_gme_buffer() {
     const int STEREO = 2;
     const int SECONDS = 100;
-    short *buf = new short[this->blipbuf_sample_rate * STEREO * SECONDS];
-    gme_play(this->emu, this->blipbuf_sample_rate * STEREO * SECONDS, buf);
+    int length = this->blipbuf_sample_rate * STEREO * SECONDS;
+    short *buf = new short[length];
+    gme_play(this->emu, length, buf);
+    int byte_length = length * sizeof(short);
+    QByteArray blip_byte_array { reinterpret_cast<char*>(buf), byte_length };
     delete[] buf;
+    emit GmeBufferChanged(blip_byte_array);
 }
 
 void NsfAudioFile::convert_apulog_to_runs() {

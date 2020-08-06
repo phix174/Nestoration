@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <QObject>
+#include <QBuffer>
 #include <QAudioOutput>
 
 #include "generator.h"
@@ -13,11 +14,12 @@ class Player : public QObject
     Q_PROPERTY(qint64 position MEMBER position NOTIFY playerPositionChanged)
 
 public:
-    explicit Player(QObject *parent = nullptr);
+    explicit Player(QAudioFormat out_format, QObject *parent = nullptr);
     void start();
 
 public slots:
     void setChannels(QList<QList<Run>> channel_runs);
+    void setGmeBuffer(const QByteArray gme_array);
     void handleStateChanged(QAudio::State new_state);
     void handlePositionChanged(qint64 byte_position);
     void seek(qint64 sample_position);
@@ -32,7 +34,7 @@ private:
     QAudioOutput *audio;
     Generator *generator;
     qint64 position = 0;
-
+    QBuffer *gme_buffer;
 };
 
 #endif // PLAYER_H

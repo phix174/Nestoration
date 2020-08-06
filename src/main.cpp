@@ -2,6 +2,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QSurfaceFormat>
+#include <QDebug>
 
 #include "audiofile.h"
 #include "nsfaudiofile.h"
@@ -10,19 +11,35 @@
 
 using namespace std;
 
+QAudioFormat get_audio_output_format() {
+    QAudioDeviceInfo device = QAudioDeviceInfo::defaultOutputDevice();
+    QAudioFormat format;
+    format.setSampleRate(1789773);
+    format.setChannelCount(2);
+    format.setSampleSize(16);
+    format.setCodec("audio/pcm");
+    format.setSampleType(QAudioFormat::SignedInt);
+    QAudioFormat nearest = device.nearestFormat(format);
+    qInfo() << device.deviceName() << "Nearest sample rate:" << nearest.sampleRate();
+    return nearest;
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
     QQmlApplicationEngine engine;
-    QSurfaceFormat format;
-    format.setSamples(4);
-    QSurfaceFormat::setDefaultFormat(format);
+    QSurfaceFormat surface_format;
+    surface_format.setSamples(4);
+    QSurfaceFormat::setDefaultFormat(surface_format);
+    QAudioFormat audio_format = get_audio_output_format();
     AudioFile audioFile;
-    NsfAudioFile nsf;
-    Player player;
+    NsfAudioFile nsf { audio_format.sampleRate() };
+    Player player { audio_format };
     QObject::connect(&nsf, SIGNAL(channelRunsChanged(QList<QList<Run>>)),
                      &player, SLOT(setChannels(QList<QList<Run>>)));
+    QObject::connect(&nsf, SIGNAL(GmeBufferChanged(const QByteArray)),
+                     &player, SLOT(setGmeBuffer(const QByteArray)));
     qRegisterMetaType<ChannelModel*>("ChannelModel*");
     engine.rootContext()->setContextProperty("audiofile", &nsf);
     engine.rootContext()->setContextProperty("player", &player);

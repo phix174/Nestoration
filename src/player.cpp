@@ -4,21 +4,13 @@
 
 #include "toneobject.h"
 
-Player::Player(QObject *parent) : QObject(parent) {
-    QAudioDeviceInfo device = QAudioDeviceInfo::defaultOutputDevice();
-    QAudioFormat format;
-    format.setSampleRate(1789773);
-    format.setChannelCount(1);
-    format.setSampleSize(32);
-    format.setCodec("audio/pcm");
-    format.setSampleType(QAudioFormat::Float);
-    QAudioFormat nearest = device.nearestFormat(format);
-    qDebug() << device.deviceName() << "Nearest sample rate:" << nearest.sampleRate();
-    this->audio = new QAudioOutput(nearest);
+Player::Player(QAudioFormat out_format, QObject *parent) : QObject(parent) {
+    this->audio = new QAudioOutput(out_format);
     QObject::connect(this->audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
-    this->generator = new Generator { nearest.sampleRate() };
+    this->generator = new Generator { out_format.sampleRate() };
     QObject::connect(this->generator, SIGNAL(positionChanged(qint64)), this, SLOT(handlePositionChanged(qint64)));
     this->generator->open(QIODevice::ReadOnly);
+    this->gme_buffer = new QBuffer;
 }
 
 void Player::setChannels(QList<QList<Run>> channel_runs) {
@@ -26,8 +18,15 @@ void Player::setChannels(QList<QList<Run>> channel_runs) {
     this->generator->setChannels(channel_runs);
 }
 
+void Player::setGmeBuffer(const QByteArray gme_array) {
+    this->audio->reset();
+    this->gme_buffer->close();
+    this->gme_buffer->setData(gme_array);
+    this->gme_buffer->open(QIODevice::ReadOnly);
+}
+
 void Player::start() {
-    this->audio->start(this->generator);
+    this->audio->start(this->gme_buffer);
     qDebug() << "Buffer size:" << this->audio->bufferSize();
 }
 
@@ -61,6 +60,7 @@ void Player::stop() {
 
 void Player::handleStateChanged(QAudio::State new_state) {
     qDebug() << "QAudioOutput state changed to:" << new_state;
+    qDebug() << "Error:" << this->audio->error();
 }
 
 void Player::handlePositionChanged(qint64 position) {
