@@ -17,6 +17,12 @@ Player::Player(QAudioFormat out_format, QObject *parent) : QObject(parent) {
     this->gme_buffer = new QBuffer;
 }
 
+Player::~Player() {
+    delete this->audio;
+    delete this->generator;
+    delete this->gme_buffer;
+}
+
 void Player::setChannels(QList<QList<Run>> channel_runs) {
     this->audio->reset();
     this->generator->setChannels(channel_runs);

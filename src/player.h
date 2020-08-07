@@ -15,6 +15,7 @@ class Player : public QObject
 
 public:
     explicit Player(QAudioFormat out_format, QObject *parent = nullptr);
+    ~Player();
     void start();
 
 public slots:
