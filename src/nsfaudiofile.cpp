@@ -104,6 +104,7 @@ void NsfAudioFile::convert_apulog_to_runs() {
     bool prev_sweep_negate = miniapu.squares[0].sweep_negate();
     int prev_sweep_shift = miniapu.squares[0].sweep_shift();
     int prev_sweep_period = miniapu.squares[0].sweep_period();
+    std::sort(apu->apu_log.begin(), apu->apu_log.end());
     for (const apu_log_t &entry: apu->apu_log) {
         if (entry.event == apu_log_event::register_write) {
             miniapu.write(entry.address, entry.data);
