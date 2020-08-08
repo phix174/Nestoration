@@ -257,10 +257,10 @@ inline void zero_apu_osc( T* osc, nes_time_t time )
 
 void Nes_Apu::end_frame( nes_time_t end_time )
 {
-	if ( end_time > last_time ) {
+	if ( end_time > last_time )
 		run_until_( end_time );
-		past_timeframe_cycles += end_time;
-	}
+	
+	past_timeframe_cycles += end_time;
 	
 	if ( dmc.nonlinear )
 	{
