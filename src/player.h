@@ -33,10 +33,13 @@ signals:
     void playerPositionChanged(qint64 byte_position);
 
 private:
+    QAudioFormat out_format;
     qreal byte_usec_ratio;
     QAudioOutput *audio;
     Generator *generator;
     qint64 position = 0;
+    qint64 bytes_played = 0;
+    qint64 seek_offset =0;
     QBuffer *gme_buffer;
 };
 

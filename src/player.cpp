@@ -5,6 +5,7 @@
 #include "toneobject.h"
 
 Player::Player(QAudioFormat out_format, QObject *parent) : QObject(parent) {
+    this->out_format = out_format;
     this->byte_usec_ratio = out_format.sampleRate() * out_format.bytesPerFrame() / 1000000.0;
     this->audio = new QAudioOutput(out_format);
     this->audio->setNotifyInterval(16);
@@ -30,6 +31,10 @@ void Player::setChannels(QList<QList<Run>> channel_runs) {
 
 void Player::setGmeBuffer(const QByteArray gme_array) {
     this->audio->reset();
+    this->position = 0;
+    this->bytes_played = 0;
+    this->seek_offset = 0;
+    emit this->playerPositionChanged(this->position);
     this->gme_buffer->close();
     this->gme_buffer->setData(gme_array);
     this->gme_buffer->open(QIODevice::ReadOnly);
@@ -41,8 +46,10 @@ void Player::start() {
 }
 
 void Player::seek(qint64 sample_position) {
-    this->generator->seek_sample(sample_position);
-    emit this->playerPositionChanged(this->generator->pos());
+    qreal sample_ratio = this->out_format.sampleRate() / 1789773.0; /* TODO: Don't hard-code 1789773. */
+    qint64 byte_position = std::round(sample_position * sample_ratio) * this->out_format.bytesPerFrame();
+    this->seek_offset = byte_position - this->bytes_played;
+    this->gme_buffer->seek(byte_position);
 }
 
 void Player::play_pause() {
@@ -71,8 +78,9 @@ void Player::stop() {
 void Player::handleNotify() {
     qint64 bytes_processed = this->audio->processedUSecs() * this->byte_usec_ratio;
     qint64 bytes_buffered = this->audio->bufferSize() - this->audio->bytesFree();
-    this->position = bytes_processed - bytes_buffered;
-    emit this->playerPositionChanged(position);
+    this->bytes_played = bytes_processed - bytes_buffered;
+    this->position = this->bytes_played + this->seek_offset;
+    emit this->playerPositionChanged(this->position);
 }
 
 void Player::handleStateChanged(QAudio::State new_state) {
