@@ -39,7 +39,6 @@ ApplicationWindow {
     Connections {
         target: audiofile
         onFileOpened: {
-            player.seek(0);
             global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
             global_scrollbar.position = 0;
         }
