@@ -26,6 +26,7 @@ public slots:
     void handlePositionChanged(qint64 byte_position);
     void seek(qint64 sample_position);
     void play_pause();
+    void pause();
     void toggle_mute(qint8 channel_i);
     void stop();
 

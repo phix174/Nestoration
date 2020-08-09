@@ -36,6 +36,15 @@ ApplicationWindow {
         viewer_to_toggle.state = new_state;
     }
 
+    Connections {
+        target: audiofile
+        onFileOpened: {
+            player.seek(0);
+            global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
+            global_scrollbar.position = 0;
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "#444444"
@@ -59,14 +68,8 @@ ApplicationWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "Open..."
                         onClicked: {
-                            player.stop();
+                            player.pause();
                             audiofile.openClicked();
-                            toneviewer0.state = "thumb";
-                            toneviewer1.state = "thumb";
-                            toneviewer2.state = "thumb";
-                            player.seek(0);
-                            global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
-                            global_scrollbar.position = 0;
                         }
                     }
                     Button {

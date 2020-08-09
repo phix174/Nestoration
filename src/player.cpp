@@ -56,8 +56,7 @@ void Player::play_pause() {
     bool playing = this->audio->state() == QAudio::ActiveState;
     bool paused = this->audio->state() == QAudio::SuspendedState;
     if (playing) {
-        qDebug() << "Suspending";
-        this->audio->suspend();
+        this->pause();
     } else if (paused) {
         qDebug() << "Resuming";
         this->audio->resume();
@@ -65,6 +64,11 @@ void Player::play_pause() {
         qDebug() << "Starting";
         this->start();
     }
+}
+
+void Player::pause() {
+    qDebug() << "Suspending";
+    this->audio->suspend();
 }
 
 void Player::toggle_mute(qint8 channel_i) {

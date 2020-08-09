@@ -16,6 +16,11 @@ Item {
     property alias scroller_width: scroller.width
     property alias mainrow_width: mainrow.width
 
+    Connections {
+        target: audiofile
+        onFileOpened: toneViewer.state = "thumb";
+    }
+
     Row {
         anchors.fill: parent;
         spacing: 1

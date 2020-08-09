@@ -19,6 +19,7 @@ public:
 
 signals:
     void GmeBufferChanged(const QByteArray gme_buffer);
+    void fileOpened();
 
 public slots:
     void openClicked();
