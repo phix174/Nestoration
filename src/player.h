@@ -6,7 +6,10 @@
 #include <QAudioOutput>
 
 #include "generator.h"
+#include "nsfpcm.h"
 #include "toneobject.h"
+
+class Music_Emu;
 
 class Player : public QObject
 {
@@ -20,7 +23,7 @@ public:
 
 public slots:
     void setChannels(QList<QList<Run>> channel_runs);
-    void setGmeBuffer(const QByteArray gme_array);
+    void setEmu(Music_Emu *emu);
     void handleNotify();
     void handleStateChanged(QAudio::State new_state);
     void handlePositionChanged(qint64 byte_position);
@@ -38,10 +41,11 @@ private:
     qreal byte_usec_ratio;
     QAudioOutput *audio;
     Generator *generator;
+    NsfPcm *nsf_pcm;
     qint64 position = 0;
     qint64 bytes_played = 0;
-    qint64 seek_offset =0;
-    QBuffer *gme_buffer;
+    qint64 seek_offset = 0;
+    int mute_states[5] { 0, 0, 0, 0, 0 };
 };
 
 #endif // PLAYER_H

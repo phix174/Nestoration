@@ -27,6 +27,7 @@ SOURCES += \
         main.cpp \
         miniapu.cpp \
         nsfaudiofile.cpp \
+        nsfpcm.cpp \
         player.cpp \
         squarechannel.cpp \
         toneobject.cpp \
@@ -51,6 +52,7 @@ HEADERS += \
     generator.h \
     miniapu.h \
     nsfaudiofile.h \
+    nsfpcm.h \
     player.h \
     squarechannel.h \
     toneobject.h \

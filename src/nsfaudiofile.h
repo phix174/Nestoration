@@ -18,7 +18,7 @@ public:
     void convert_apulog_to_runs();
 
 signals:
-    void GmeBufferChanged(const QByteArray gme_buffer);
+    void emuChanged(Music_Emu *emu);
     void fileOpened();
 
 public slots:

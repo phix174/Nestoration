@@ -15,13 +15,13 @@ Player::Player(QAudioFormat out_format, QObject *parent) : QObject(parent) {
     this->generator = new Generator { out_format.sampleRate() };
     QObject::connect(this->generator, SIGNAL(positionChanged(qint64)), this, SLOT(handlePositionChanged(qint64)));
     this->generator->open(QIODevice::ReadOnly);
-    this->gme_buffer = new QBuffer;
+    this->nsf_pcm = new NsfPcm { out_format.sampleRate() };
 }
 
 Player::~Player() {
     delete this->audio;
     delete this->generator;
-    delete this->gme_buffer;
+    delete this->nsf_pcm;
 }
 
 void Player::setChannels(QList<QList<Run>> channel_runs) {
@@ -29,19 +29,19 @@ void Player::setChannels(QList<QList<Run>> channel_runs) {
     this->generator->setChannels(channel_runs);
 }
 
-void Player::setGmeBuffer(const QByteArray gme_array) {
+void Player::setEmu(Music_Emu *emu) {
     this->audio->reset();
     this->position = 0;
     this->bytes_played = 0;
     this->seek_offset = 0;
     emit this->playerPositionChanged(this->position);
-    this->gme_buffer->close();
-    this->gme_buffer->setData(gme_array);
-    this->gme_buffer->open(QIODevice::ReadOnly);
+    this->nsf_pcm->close();
+    this->nsf_pcm->set_emu(emu);
+    this->nsf_pcm->open(QIODevice::ReadOnly);
 }
 
 void Player::start() {
-    this->audio->start(this->gme_buffer);
+    this->audio->start(this->nsf_pcm);
     qDebug() << "Buffer size:" << this->audio->bufferSize();
 }
 
@@ -49,7 +49,7 @@ void Player::seek(qint64 sample_position) {
     qreal sample_ratio = this->out_format.sampleRate() / 1789773.0; /* TODO: Don't hard-code 1789773. */
     qint64 byte_position = std::round(sample_position * sample_ratio) * this->out_format.bytesPerFrame();
     this->seek_offset = byte_position - this->bytes_played;
-    this->gme_buffer->seek(byte_position);
+    this->nsf_pcm->seek_sample(byte_position / 2);
 }
 
 void Player::play_pause() {
@@ -72,7 +72,9 @@ void Player::pause() {
 }
 
 void Player::toggle_mute(qint8 channel_i) {
-    this->generator->toggle_mute(channel_i);
+    int was_muted = this->mute_states[channel_i];
+    this->mute_states[channel_i] = was_muted ? 0 : 1;
+    this->nsf_pcm->set_mute(channel_i, this->mute_states[channel_i]);
 }
 
 void Player::stop() {

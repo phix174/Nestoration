@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
     Player player { audio_format };
     QObject::connect(&nsf, SIGNAL(channelRunsChanged(QList<QList<Run>>)),
                      &player, SLOT(setChannels(QList<QList<Run>>)));
-    QObject::connect(&nsf, SIGNAL(GmeBufferChanged(const QByteArray)),
-                     &player, SLOT(setGmeBuffer(const QByteArray)));
+    QObject::connect(&nsf, SIGNAL(emuChanged(Music_Emu*)),
+                     &player, SLOT(setEmu(Music_Emu*)));
     qRegisterMetaType<ChannelModel*>("ChannelModel*");
     engine.rootContext()->setContextProperty("audiofile", &nsf);
     engine.rootContext()->setContextProperty("player", &player);

@@ -34,6 +34,8 @@ void NsfAudioFile::openClicked()
         this->read_gme_buffer();
         this->convert_apulog_to_runs();
         emit this->fileOpened();
+        gme_seek_samples(this->emu, 0);
+        emit this->emuChanged(this->emu);
     }
 }
 
@@ -88,7 +90,6 @@ void NsfAudioFile::read_gme_buffer() {
     int byte_length = length * sizeof(short);
     QByteArray blip_byte_array { reinterpret_cast<char*>(buf), byte_length };
     delete[] buf;
-    emit GmeBufferChanged(blip_byte_array);
 }
 
 void NsfAudioFile::convert_apulog_to_runs() {
