@@ -46,13 +46,16 @@ int NsfAudioFile::choose_track() {
     bool ok;
     QStringList tracks;
     for (int i = 0; i < track_count; i += 1) {
-        tracks.append(QString::number(i + 1));
+        gme_info_t *track_info;
+        gme_track_info(this->emu, &track_info, i);
+        QString title = track_info->song;
+        tracks.append(QString::number(i + 1) + (title.isEmpty() ? "" : ": " + title));
     }
     QString track_num_str = QInputDialog::getItem(nullptr, tr("Choose a track to open"), tr("Track:"), tracks, 0, false, &ok);
     if (!ok) {
         return INVALID_TRACK;
     }
-    int track_num = track_num_str.toInt() - 1;
+    int track_num = tracks.indexOf(track_num_str);
     if (track_num >= track_count) {
         return INVALID_TRACK;
     }
@@ -110,6 +113,7 @@ void NsfAudioFile::convert_apulog_to_runs() {
     int prev_sweep_shift = miniapu.squares[0].sweep_shift();
     int prev_sweep_period = miniapu.squares[0].sweep_period();
     std::sort(apu->apu_log.begin(), apu->apu_log.end());
+    /* TODO: Metroid Chozo theme mutes triangle channel in an unsupported way. */
     for (const apu_log_t &entry: apu->apu_log) {
         if (entry.event == apu_log_event::register_write) {
             miniapu.write(entry.address, entry.data);
