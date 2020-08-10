@@ -13,7 +13,7 @@ const int INVALID_TRACK = -1;
 NsfAudioFile::NsfAudioFile(int sample_rate, QObject *parent)
     : AudioFile(parent), blipbuf_sample_rate(sample_rate)
 {
-    file_types = "NSF/NSFe (*.nsf *.nsfe)";
+    file_types = "NSF/NSFe (*.nsf *.NSF *.nsfe *.NSFE)";
 }
 
 NsfAudioFile::~NsfAudioFile()
