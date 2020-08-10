@@ -19,7 +19,7 @@ public:
 
 signals:
     void emuChanged(Music_Emu *emu);
-    void fileOpened();
+    void fileOpened(QString file_name, qint64 file_track);
 
 public slots:
     void openClicked();
@@ -27,6 +27,7 @@ public slots:
 private:
     Music_Emu *emu;
     const int blipbuf_sample_rate;
+    qint64 file_track = -1;
 };
 
 #endif // NSFAUDIOFILE_H

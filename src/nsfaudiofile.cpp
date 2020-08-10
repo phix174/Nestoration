@@ -29,11 +29,12 @@ void NsfAudioFile::openClicked()
     if (file_name == "") {
         return;
     }
+    QString file_name_only = QFileInfo(file_name).fileName();
     this->open(file_name);
     if (this->is_open) {
         this->read_gme_buffer();
         this->convert_apulog_to_runs();
-        emit this->fileOpened();
+        emit this->fileOpened(file_name_only, this->file_track);
         gme_seek_samples(this->emu, 0);
         emit this->emuChanged(this->emu);
     }
@@ -61,6 +62,7 @@ int NsfAudioFile::choose_track() {
 void NsfAudioFile::open(QString file_name) {
     if (this->is_open) {
         this->close();
+        this->file_track = INVALID_TRACK;
     }
     gme_err_t open_err = gme_open_file(qPrintable(file_name), &this->emu, this->blipbuf_sample_rate);
     qDebug() << open_err;
@@ -71,6 +73,7 @@ void NsfAudioFile::open(QString file_name) {
         gme_err_t start_err = gme_start_track(this->emu, track_num);
         if (!start_err) {
             this->is_open = true;
+            this->file_track = track_num;
         }
         gme_info_t *track_info;
         gme_track_info(this->emu, &track_info, track_num);

@@ -7,7 +7,9 @@ ApplicationWindow {
     visible: true
     width: 1920
     height: 1080
-    title: qsTr("NestorQtion")
+    property string open_file_name: qsTr('')
+    property int open_file_track: -1
+    title: qsTr("NestorQtion") + (open_file_name ? " - " + open_file_name + (open_file_track > -1 ? " #" + (open_file_track + 1) : "") : "")
     readonly property int sHAPE_NONE: 0
     readonly property int sHAPE_SQUARE_EIGHTH: 1
     readonly property int sHAPE_SQUARE_QUARTER: 2
@@ -41,6 +43,8 @@ ApplicationWindow {
         onFileOpened: {
             global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
             global_scrollbar.position = 0;
+            root.open_file_name = file_name;
+            root.open_file_track = file_track;
         }
     }
 
