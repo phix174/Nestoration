@@ -111,7 +111,7 @@ void NsfAudioFile::convert_apulog_to_runs() {
     bool prev_sweep_enabled = miniapu.squares[0].sweep_enabled();
     bool prev_sweep_negate = miniapu.squares[0].sweep_negate();
     int prev_sweep_shift = miniapu.squares[0].sweep_shift();
-    int prev_sweep_period = miniapu.squares[0].sweep_period();
+    //int prev_sweep_period = miniapu.squares[0].sweep_period();
     std::sort(apu->apu_log.begin(), apu->apu_log.end());
     /* TODO: Metroid Chozo theme mutes triangle channel in an unsupported way. */
     /* TODO: So does Battletoads.nsfe #4 */
@@ -179,7 +179,7 @@ void NsfAudioFile::convert_apulog_to_runs() {
                 prev_sweep_enabled = miniapu.squares[0].sweep_enabled();
                 prev_sweep_negate = miniapu.squares[0].sweep_negate();
                 prev_sweep_shift = miniapu.squares[0].sweep_shift();
-                prev_sweep_period = miniapu.squares[0].sweep_period();
+                //prev_sweep_period = miniapu.squares[0].sweep_period();
                 has_previous[channel_i] = true;
                 new_tone[channel_i] = false;
             }
