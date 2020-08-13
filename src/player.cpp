@@ -41,8 +41,11 @@ void Player::setEmu(Music_Emu *emu) {
 }
 
 void Player::start() {
-    this->audio->start(this->nsf_pcm);
-    qDebug() << "Buffer size:" << this->audio->bufferSize();
+    if (this->nsf_pcm->isOpen()) {
+        qDebug() << "Starting";
+        this->audio->start(this->nsf_pcm);
+        qDebug() << "Buffer size:" << this->audio->bufferSize();
+    }
 }
 
 void Player::seek(qint64 sample_position) {
@@ -61,7 +64,6 @@ void Player::play_pause() {
         qDebug() << "Resuming";
         this->audio->resume();
     } else {
-        qDebug() << "Starting";
         this->start();
     }
 }

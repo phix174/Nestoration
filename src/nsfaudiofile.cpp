@@ -114,6 +114,7 @@ void NsfAudioFile::convert_apulog_to_runs() {
     int prev_sweep_period = miniapu.squares[0].sweep_period();
     std::sort(apu->apu_log.begin(), apu->apu_log.end());
     /* TODO: Metroid Chozo theme mutes triangle channel in an unsupported way. */
+    /* TODO: So does Battletoads.nsfe #4 */
     for (const apu_log_t &entry: apu->apu_log) {
         if (entry.event == apu_log_event::register_write) {
             miniapu.write(entry.address, entry.data);

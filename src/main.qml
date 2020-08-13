@@ -41,6 +41,7 @@ ApplicationWindow {
     Connections {
         target: audiofile
         onFileOpened: {
+            controls.visible = true
             global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
             global_scrollbar.position = 0;
             root.open_file_name = file_name;
@@ -75,29 +76,37 @@ ApplicationWindow {
                             audiofile.openClicked();
                         }
                     }
-                    Button {
+
+                    Row {
+                        id: controls
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "Seek 0"
-                        onClicked: {
-                            player.seek(0)
+                        spacing: 8
+                        visible: false
+
+                        Button {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "Seek 0"
+                            onClicked: {
+                                player.seek(0)
+                            }
                         }
-                    }
-                    Button {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "Play/Pause"
-                        onClicked: {
-                            player.play_pause()
+                        Button {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "Play/Pause"
+                            onClicked: {
+                                player.play_pause()
+                            }
                         }
-                    }
-                    MuteButton {
-                        property int channel_i: 3
-                        text: "Mute " + channel_i
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    MuteButton {
-                        property int channel_i: 4
-                        text: "Mute " + channel_i
-                        anchors.verticalCenter: parent.verticalCenter
+                        MuteButton {
+                            property int channel_i: 3
+                            text: "Mute " + channel_i
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        MuteButton {
+                            property int channel_i: 4
+                            text: "Mute " + channel_i
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
                 }
             }
