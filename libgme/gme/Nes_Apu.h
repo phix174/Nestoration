@@ -13,7 +13,8 @@ typedef unsigned nes_addr_t; // 16-bit memory address
 
 enum apu_log_event {
 	register_write,
-	timeout
+	timeout,
+	length_reloaded
 };
 
 struct apu_log_t {

@@ -113,13 +113,18 @@ void NsfAudioFile::convert_apulog_to_runs() {
     int prev_sweep_shift = miniapu.squares[0].sweep_shift();
     //int prev_sweep_period = miniapu.squares[0].sweep_period();
     std::sort(apu->apu_log.begin(), apu->apu_log.end());
-    /* TODO: Metroid Chozo theme mutes triangle channel in an unsupported way. */
-    /* TODO: So does Battletoads.nsfe #4 */
+    /* TODO: Battletoads.nsfe #4 unmutes triangle channel in an unsupported way. */
     for (const apu_log_t &entry: apu->apu_log) {
         if (entry.event == apu_log_event::register_write) {
             miniapu.write(entry.address, entry.data);
         } else if (entry.event == apu_log_event::timeout) {
-            miniapu.squares[static_cast<int>(entry.channel)].timed_out = true;
+            if (entry.channel < 2) {
+                miniapu.squares[static_cast<int>(entry.channel)].timed_out = true;
+            } else {
+                miniapu.triangle.timed_out = true;
+            }
+        } else if (entry.event == apu_log_event::length_reloaded) {
+            miniapu.triangle.timed_out = false;
         }
         for (int channel_i = 0; channel_i < 3; channel_i += 1) {
             if (channel_i < 2) {
@@ -130,7 +135,7 @@ void NsfAudioFile::convert_apulog_to_runs() {
             } else {
                 tone[channel_i].semitone_id = miniapu.triangle.midi_note();
                 tone[channel_i].nes_timer = miniapu.triangle.timer_whole();
-                tone[channel_i].volume = tone[channel_i].nes_timer > 2 ? 15 : 0;
+                tone[channel_i].volume = miniapu.triangle.out_volume();
                 tone[channel_i].shape = tone[channel_i].volume ? CycleShape::Triangle : CycleShape::None;
             }
             if (has_previous[channel_i]) {

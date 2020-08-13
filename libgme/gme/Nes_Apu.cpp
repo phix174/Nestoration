@@ -183,6 +183,7 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 		frame_delay = frame_period;
 		int old_square1_length_counter = square1.length_counter;
 		int old_square2_length_counter = square2.length_counter;
+		int old_triangle_length_counter = triangle.length_counter;
 		switch ( frame++ )
 		{
 			case 0:
@@ -213,6 +214,14 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 					entry.channel = 1;
 					apu_log.append(entry);
 				}
+				if (!(triangle.regs[0] & 0x80) && old_triangle_length_counter > 0 && triangle.length_counter <= 0) {
+					apu_log_t entry {
+						past_timeframe_cycles + time,
+						apu_log_event::timeout
+					};
+					entry.channel = 2;
+					apu_log.append(entry);
+				}
 
 				square1.clock_sweep( -1 );
 				square2.clock_sweep( 0 );
@@ -238,7 +247,23 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 		}
 		
 		// clock envelopes and linear counter every frame
+		int old_triangle_linear_counter = triangle.linear_counter;
 		triangle.clock_linear_counter();
+		if (old_triangle_linear_counter > 0 && triangle.linear_counter <= 0) {
+			apu_log_t entry {
+				past_timeframe_cycles + time,
+				apu_log_event::timeout
+			};
+			entry.channel = 2;
+			apu_log.append(entry);
+		} else if (old_triangle_linear_counter <= 0 && triangle.linear_counter > 0) {
+			apu_log_t entry {
+				past_timeframe_cycles + time,
+				apu_log_event::length_reloaded
+			};
+			entry.channel = 2;
+			apu_log.append(entry);
+		}
 		square1.clock_envelope();
 		square2.clock_envelope();
 		noise.clock_envelope();
