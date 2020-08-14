@@ -25,7 +25,7 @@ public slots:
     void openClicked();
 
 private:
-    Music_Emu *emu;
+    Music_Emu *emu { nullptr };
     const int blipbuf_sample_rate;
     qint64 file_track = -1;
 };

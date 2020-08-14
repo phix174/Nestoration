@@ -16,9 +16,10 @@ NsfAudioFile::NsfAudioFile(int sample_rate, QObject *parent)
     file_types = "NSF/NSFe (*.nsf *.NSF *.nsfe *.NSFE)";
 }
 
-NsfAudioFile::~NsfAudioFile()
-{
-    gme_delete(this->emu);
+NsfAudioFile::~NsfAudioFile() {
+    if (this->emu) {
+        gme_delete(this->emu);
+    }
 }
 
 void NsfAudioFile::openClicked()
