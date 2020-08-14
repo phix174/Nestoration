@@ -72,6 +72,7 @@ public:
 
     double semitone_id;
     qint16 nes_timer;
+    qint16 nes_timer_end;
     short int shape;
     sampleoff start;
     samplesize length;
@@ -79,6 +80,7 @@ public:
     QVector<Cycle> cycles;
 
     QString name() const;
+    double semitone_id_end() const;
     samplesize match_before(ToneObject &before, samplesize max_length = 0);
     samplesize match_after(ToneObject &after, samplesize max_length = 0);
 

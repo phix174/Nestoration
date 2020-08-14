@@ -25,10 +25,6 @@ int SquareRegisters::timer_low() { return (this->registers[2] >> 0) & 0xff; }
 int SquareRegisters::length_counter() { return (this->registers[3] >> 3) & 0x1f; }
 int SquareRegisters::timer_high() { return (this->registers[3] >> 0) & 0x07; }
 int SquareRegisters::timer_whole() { return (this->timer_high() << 8) + this->timer_low(); }
-double SquareRegisters::midi_note() {
-    int period = 16 * (this->timer_whole() + 1);
-    return period_to_semitone(period);
-}
 int SquareRegisters::out_volume() {
     bool disabled = !this->enabled;
     bool too_high = this->timer_whole() < 8;
@@ -44,10 +40,6 @@ int TriangleRegisters::timer_low() { return (this->registers[2] >> 0) & 0xff; };
 int TriangleRegisters::length_counter() { return (this->registers[3] >> 3) & 0x1f; };
 int TriangleRegisters::timer_high() { return (this->registers[3] >> 0) & 0x07; };
 int TriangleRegisters::timer_whole() { return (this->timer_high() << 8) + this->timer_low(); }
-double TriangleRegisters::midi_note() {
-    int period = 32 * (this->timer_whole() + 1);
-    return period_to_semitone(period);
-}
 int TriangleRegisters::out_volume() {
     bool disabled = !this->enabled;
     bool too_high = this->timer_whole() < 2;

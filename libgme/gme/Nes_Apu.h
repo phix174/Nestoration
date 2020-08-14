@@ -15,7 +15,8 @@ enum apu_log_event {
 	register_write,
 	timeout,
 	timeout_linear,
-	reloaded_linear
+	reloaded_linear,
+	sweep
 };
 
 struct apu_log_t {
@@ -25,7 +26,7 @@ struct apu_log_t {
 	long long cpu_cycle;
 	apu_log_event event;
 	nes_addr_t address = 0;
-	char data = 0;
+	short data = 0;
 	char channel = 0;
 };
 

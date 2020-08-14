@@ -5,6 +5,8 @@
 ToneObject::ToneObject()
 {
     this->semitone_id = -999;
+    this->nes_timer = -1;
+    this->nes_timer_end = -1;
     this->shape = CycleShape::Irregular;
     this->start = 0;
     this->length = 0;
@@ -13,12 +15,18 @@ ToneObject::ToneObject()
 }
 
 ToneObject::ToneObject(const double &semitone_id, qint16 nes_timer, const short int &shape)
-    : semitone_id(semitone_id), nes_timer(nes_timer), shape(shape)
+    : semitone_id(semitone_id), nes_timer(nes_timer), nes_timer_end(nes_timer), shape(shape)
 {
     this->start = 0;
     this->length = 0;
     this->volume = 0;
     this->cycles = {};
+}
+
+double ToneObject::semitone_id_end() const {
+    samplesize period = 16 * (this->nes_timer_end + 1);
+    if (period == 0) return this->semitone_id;
+    return period_to_semitone(period);
 }
 
 QString ToneObject::name() const {

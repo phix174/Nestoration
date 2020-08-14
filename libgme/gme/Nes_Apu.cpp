@@ -184,6 +184,10 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 		int old_square1_length_counter = square1.length_counter;
 		int old_square2_length_counter = square2.length_counter;
 		int old_triangle_length_counter = triangle.length_counter;
+		int old_square1_period = ((square1.regs[3] & 0x07) << 8) + square1.regs[2];
+		int old_square2_period = ((square2.regs[3] & 0x07) << 8) + square2.regs[2];
+		int square1_period;
+		int square2_period;
 		switch ( frame++ )
 		{
 			case 0:
@@ -225,7 +229,27 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 
 				square1.clock_sweep( -1 );
 				square2.clock_sweep( 0 );
-				
+				square1_period = ((square1.regs[3] & 0x07) << 8) + square1.regs[2];
+				square2_period = ((square2.regs[3] & 0x07) << 8) + square2.regs[2];
+				if (square1_period != old_square1_period) {
+					apu_log_t entry {
+						past_timeframe_cycles + time,
+						apu_log_event::sweep
+					};
+					entry.channel = 0;
+					entry.data = square1_period;
+					apu_log.append(entry);
+				}
+				if (square2_period != old_square2_period) {
+					apu_log_t entry {
+						past_timeframe_cycles + time,
+						apu_log_event::sweep
+					};
+					entry.channel = 1;
+					entry.data = square2_period;
+					apu_log.append(entry);
+				}
+
 				// frame 2 is slightly shorter in mode 1
 				if ( dmc.pal_mode && frame == 3 )
 					frame_delay -= 2;

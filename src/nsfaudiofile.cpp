@@ -112,6 +112,7 @@ void NsfAudioFile::convert_apulog_to_runs() {
     bool prev_sweep_negate = miniapu.squares[0].sweep_negate();
     int prev_sweep_shift = miniapu.squares[0].sweep_shift();
     //int prev_sweep_period = miniapu.squares[0].sweep_period();
+    short sweep_end[2] { -1, -1 };
     std::sort(apu->apu_log.begin(), apu->apu_log.end());
     for (const apu_log_t &entry: apu->apu_log) {
         if (entry.event == apu_log_event::register_write) {
@@ -126,26 +127,32 @@ void NsfAudioFile::convert_apulog_to_runs() {
             miniapu.triangle.timed_out_linear = true;
         } else if (entry.event == apu_log_event::reloaded_linear) {
             miniapu.triangle.timed_out_linear = false;
+        } else if (entry.event == apu_log_event::sweep) {
+            sweep_end[static_cast<int>(entry.channel)] = entry.data;
         }
         for (int channel_i = 0; channel_i < 3; channel_i += 1) {
             if (channel_i < 2) {
-                tone[channel_i].semitone_id = miniapu.squares[channel_i].midi_note();
                 tone[channel_i].nes_timer = miniapu.squares[channel_i].timer_whole();
+                tone[channel_i].semitone_id = period_to_semitone(16 * (tone[channel_i].nes_timer + 1));
                 tone[channel_i].volume = miniapu.squares[channel_i].out_volume();
                 tone[channel_i].shape = tone[channel_i].volume ? miniapu.squares[channel_i].duty() + 1 : CycleShape::None;
             } else {
-                tone[channel_i].semitone_id = miniapu.triangle.midi_note();
                 tone[channel_i].nes_timer = miniapu.triangle.timer_whole();
+                tone[channel_i].semitone_id = period_to_semitone(32 * (tone[channel_i].nes_timer + 1));
                 tone[channel_i].volume = miniapu.triangle.out_volume();
                 tone[channel_i].shape = tone[channel_i].volume ? CycleShape::Triangle : CycleShape::None;
             }
             if (has_previous[channel_i]) {
                 ToneObject &previous = tones[channel_i].last();
-                if (tone[channel_i].semitone_id != previous.semitone_id
+                if (tone[channel_i].nes_timer != previous.nes_timer
                         || tone[channel_i].shape != previous.shape
                         || tone[channel_i].volume != previous.volume) {
                     tone[channel_i].start = entry.cpu_cycle;
                     previous.length = tone[channel_i].start - previous.start;
+                    if (channel_i < 2 && sweep_end[channel_i] > -1) {
+                        previous.nes_timer_end = sweep_end[channel_i];
+                        sweep_end[channel_i] = -1;
+                    }
                     if (previous.length == 0) {
                         // If the current tone and the previous tone started on the same CPU cycle
                         // (such as cycle 0), then replace the previous tone with the current tone.
@@ -163,20 +170,6 @@ void NsfAudioFile::convert_apulog_to_runs() {
                         //qDebug() << previous.start << previous.length << previous.semitone_id << previous.volume;
                     }
                     new_tone[channel_i] = true;
-                    if (channel_i == 0 && prev_sweep_enabled) {
-                        int half_frame = (miniapu.framecounter_mode == 1 ? 37282 : 29830) / 2;
-                        int sweep_steps = previous.length / half_frame;
-                        int start_nes_timer = previous.nes_timer;
-                        int end_nes_timer = start_nes_timer;
-                        for (int i=0; i<sweep_steps; i++) {
-                            int change_factor = end_nes_timer >> prev_sweep_shift;
-                            if (prev_sweep_negate) {
-                                change_factor = -1 - change_factor;
-                            }
-                            end_nes_timer += change_factor;
-                        }
-                        //qDebug() << "Sweep from" << start_nes_timer << "to" << end_nes_timer;
-                    }
                 }
             }
             if (new_tone[channel_i] || !has_previous[channel_i]) {

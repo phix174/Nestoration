@@ -23,7 +23,6 @@ public:
     int length_counter();
     int timer_high();
     int timer_whole();
-    double midi_note();
     int out_volume();
     bool enabled { false };
     bool timed_out { false };
@@ -37,7 +36,6 @@ public:
     int length_counter();
     int timer_high();
     int timer_whole();
-    double midi_note();
     int out_volume();
     bool enabled { false };
     bool timed_out { false };

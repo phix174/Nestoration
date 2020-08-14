@@ -180,6 +180,8 @@ ApplicationWindow {
 
                                 Label { text: "Volume:"; color: "#ffffff" }
                                 TextInput { id: input_volume; color: "#ffffff" }
+                                Label { text: "NES Timer End:"; color: "#ffffff" }
+                                TextInput { id: input_nes_timer_end; color: "#ffffff"; readOnly: true }
                             }
                         }
                     }
