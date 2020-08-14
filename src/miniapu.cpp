@@ -51,7 +51,7 @@ double TriangleRegisters::midi_note() {
 int TriangleRegisters::out_volume() {
     bool disabled = !this->enabled;
     bool too_high = this->timer_whole() < 2;
-    if (disabled || too_high || this->timed_out) {
+    if (disabled || too_high || this->timed_out || this->timed_out_linear) {
         return 0;
     }
     return 15;
@@ -97,11 +97,12 @@ bool MiniApu::write(short address, char data) {
             qDebug() << "Channel 1 length counter started.";
         }
     }
-    if (0x4008 <= address && address < 0x400c)
-        return this->triangle.write(address - 0x4008, data);
-        if (address == 0x4008 || address == 0x400b) {
+    if (0x4008 <= address && address < 0x400c) {
+        this->triangle.write(address - 0x4008, data);
+        if (address == 0x400b) {
             this->triangle.timed_out = false;
         }
+    }
     if (address == 0x4015) {
         this->squares[0].enabled = data & 0x01;
         this->squares[1].enabled = data & 0x02;

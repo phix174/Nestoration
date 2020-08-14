@@ -113,7 +113,6 @@ void NsfAudioFile::convert_apulog_to_runs() {
     int prev_sweep_shift = miniapu.squares[0].sweep_shift();
     //int prev_sweep_period = miniapu.squares[0].sweep_period();
     std::sort(apu->apu_log.begin(), apu->apu_log.end());
-    /* TODO: Battletoads.nsfe #4 unmutes triangle channel in an unsupported way. */
     for (const apu_log_t &entry: apu->apu_log) {
         if (entry.event == apu_log_event::register_write) {
             miniapu.write(entry.address, entry.data);
@@ -123,8 +122,10 @@ void NsfAudioFile::convert_apulog_to_runs() {
             } else {
                 miniapu.triangle.timed_out = true;
             }
-        } else if (entry.event == apu_log_event::length_reloaded) {
-            miniapu.triangle.timed_out = false;
+        } else if (entry.event == apu_log_event::timeout_linear) {
+            miniapu.triangle.timed_out_linear = true;
+        } else if (entry.event == apu_log_event::reloaded_linear) {
+            miniapu.triangle.timed_out_linear = false;
         }
         for (int channel_i = 0; channel_i < 3; channel_i += 1) {
             if (channel_i < 2) {

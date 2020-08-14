@@ -252,14 +252,14 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 		if (old_triangle_linear_counter > 0 && triangle.linear_counter <= 0) {
 			apu_log_t entry {
 				past_timeframe_cycles + time,
-				apu_log_event::timeout
+				apu_log_event::timeout_linear
 			};
 			entry.channel = 2;
 			apu_log.append(entry);
 		} else if (old_triangle_linear_counter <= 0 && triangle.linear_counter > 0) {
 			apu_log_t entry {
 				past_timeframe_cycles + time,
-				apu_log_event::length_reloaded
+				apu_log_event::reloaded_linear
 			};
 			entry.channel = 2;
 			apu_log.append(entry);

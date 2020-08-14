@@ -41,6 +41,7 @@ public:
     int out_volume();
     bool enabled { false };
     bool timed_out { false };
+    bool timed_out_linear { false };
 };
 
 class MiniApu {
