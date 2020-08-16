@@ -4,6 +4,7 @@
 #include "gme/Nsf_Emu.h"
 
 #include <QDebug>
+#include <QSettings>
 #include <QFileDialog>
 #include <QDir>
 #include <QInputDialog>
@@ -22,15 +23,15 @@ NsfAudioFile::~NsfAudioFile() {
     }
 }
 
-void NsfAudioFile::openClicked()
-{
-    QString nes_dir = QDir::homePath() + QString("/storage/audio/emu/nes");
-    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a NES music file", nes_dir, this->file_types);
-    //QString file_name = QDir::homePath() + QString("/storage/audio/emu/nes/Disney's DuckTales (Released Version) (NTSC) (SFX).nsf");
+void NsfAudioFile::openClicked() {
+    QSettings settings;
+    QString starting_dir = settings.value("open_dir", QDir::homePath()).toString();
+    QString file_name = QFileDialog::getOpenFileName(nullptr, "Open a NES music file", starting_dir, this->file_types);
     if (file_name == "") {
         return;
     }
     QString file_name_only = QFileInfo(file_name).fileName();
+    settings.setValue("open_dir", QFileInfo(file_name).dir().canonicalPath());
     this->open(file_name);
     if (this->is_open) {
         this->read_gme_buffer();
