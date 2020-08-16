@@ -7,5 +7,6 @@
         <file>PianoBackground.qml</file>
         <file>MuteButton.qml</file>
         <file>ADSR.qml</file>
+        <file>TrackSelectorDialog.qml</file>
     </qresource>
 </RCC>

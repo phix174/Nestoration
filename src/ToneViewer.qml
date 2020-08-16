@@ -18,7 +18,8 @@ Item {
 
     Connections {
         target: audiofile
-        onFileOpened: toneViewer.state = "thumb";
+        onFileOpened: toneViewer.state = "";
+        onTrackOpened: toneViewer.state = "thumb";
     }
 
     Row {

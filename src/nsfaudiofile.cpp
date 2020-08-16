@@ -30,38 +30,8 @@ void NsfAudioFile::openClicked() {
     if (file_name == "") {
         return;
     }
-    QString file_name_only = QFileInfo(file_name).fileName();
     settings.setValue("open_dir", QFileInfo(file_name).dir().canonicalPath());
     this->open(file_name);
-    if (this->is_open) {
-        this->read_gme_buffer();
-        this->convert_apulog_to_runs();
-        emit this->fileOpened(file_name_only, this->file_track);
-        gme_seek_samples(this->emu, 0);
-        emit this->emuChanged(this->emu);
-    }
-}
-
-int NsfAudioFile::choose_track() {
-    int track_count = gme_track_count(this->emu);
-    qDebug() << "Track count:" << track_count;
-    bool ok;
-    QStringList tracks;
-    for (int i = 0; i < track_count; i += 1) {
-        gme_info_t *track_info;
-        gme_track_info(this->emu, &track_info, i);
-        QString title = track_info->song;
-        tracks.append(QString::number(i + 1) + (title.isEmpty() ? "" : ": " + title));
-    }
-    QString track_num_str = QInputDialog::getItem(nullptr, tr("Choose a track to open"), tr("Track:"), tracks, 0, false, &ok);
-    if (!ok) {
-        return INVALID_TRACK;
-    }
-    int track_num = tracks.indexOf(track_num_str);
-    if (track_num >= track_count) {
-        return INVALID_TRACK;
-    }
-    return track_num;
 }
 
 void NsfAudioFile::open(QString file_name) {
@@ -70,9 +40,33 @@ void NsfAudioFile::open(QString file_name) {
         this->file_track = INVALID_TRACK;
     }
     gme_err_t open_err = gme_open_file(qPrintable(file_name), &this->emu, this->blipbuf_sample_rate);
-    qDebug() << open_err;
-    int track_num = this->choose_track();
-    if (track_num != INVALID_TRACK) {
+    if (open_err) {
+        qDebug() << open_err;
+        return;
+    }
+    QString file_name_only = QFileInfo(file_name).fileName();
+    emit this->fileOpened(file_name_only);
+    this->list_tracks();
+}
+
+void NsfAudioFile::list_tracks() {
+    int track_count = gme_track_count(this->emu);
+    qDebug() << "Track count:" << track_count;
+    QStringList tracks;
+    QList<int> track_lengths;
+    for (int i = 0; i < track_count; i += 1) {
+        gme_info_t *track_info;
+        gme_track_info(this->emu, &track_info, i);
+        QString title = track_info->song;
+        QString option = QString::number(i + 1) + (title.isEmpty() ? "" : ": " + title);
+        tracks.append(option);
+        track_lengths.append(track_info->play_length);
+    }
+    emit this->tracksListed(tracks, track_lengths);
+}
+
+void NsfAudioFile::select_track(qint16 track_num, qint32 length_msec) {
+    if (track_num != INVALID_TRACK && track_num < 256) {
         qDebug() << "Track" << track_num << "selected";
         gme_enable_accuracy(this->emu, 1);
         gme_err_t start_err = gme_start_track(this->emu, track_num);
@@ -80,13 +74,17 @@ void NsfAudioFile::open(QString file_name) {
             this->is_open = true;
             this->file_track = track_num;
         }
-        gme_info_t *track_info;
-        gme_track_info(this->emu, &track_info, track_num);
-        qDebug() << "Track Length:" << track_info->play_length << "ms";
+        qDebug() << "Track Length:" << length_msec << "ms";
     }
     if (!this->is_open) {
         this->close();
+        return;
     }
+    this->read_gme_buffer();
+    this->convert_apulog_to_runs();
+    gme_seek_samples(this->emu, 0);
+    emit this->emuChanged(this->emu);
+    emit this->trackOpened(this->file_track);
 }
 
 void NsfAudioFile::read_gme_buffer() {
