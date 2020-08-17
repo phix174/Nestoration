@@ -39,12 +39,13 @@ Dialog {
                 id: track_combobox
                 width: parent.width
                 model: open_tracks
-
-                onCurrentIndexChanged: {
+                function set_length() {
                     var length = open_track_lengths[currentIndex] / 1000.0;
                     open_length.text = length;
                     default_length.text = length + qsTr(" sec");
                 }
+                onModelChanged: set_length();
+                onCurrentIndexChanged: set_length();
             }
         }
 
