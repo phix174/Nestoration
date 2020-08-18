@@ -65,7 +65,7 @@ void NsfAudioFile::list_tracks() {
     emit this->tracksListed(tracks, track_lengths);
 }
 
-void NsfAudioFile::select_track(qint16 track_num, qint32 length_msec) {
+void NsfAudioFile::select_track(qint16 track_num, qreal length_sec) {
     if (track_num != INVALID_TRACK && track_num < 256) {
         qDebug() << "Track" << track_num << "selected";
         gme_enable_accuracy(this->emu, 1);
@@ -74,43 +74,39 @@ void NsfAudioFile::select_track(qint16 track_num, qint32 length_msec) {
             this->is_open = true;
             this->file_track = track_num;
         }
-        qDebug() << "Track Length:" << length_msec << "ms";
     }
     if (!this->is_open) {
         this->close();
         return;
     }
-    this->read_gme_buffer();
-    this->convert_apulog_to_runs();
+    this->read_gme_buffer(length_sec);
+    this->convert_apulog_to_runs(length_sec);
     gme_seek_samples(this->emu, 0);
     emit this->emuChanged(this->emu);
     emit this->trackOpened(this->file_track);
 }
 
-void NsfAudioFile::read_gme_buffer() {
+void NsfAudioFile::read_gme_buffer(qreal length_sec) {
     const int STEREO = 2;
-    const int SECONDS = 100;
-    int length = this->blipbuf_sample_rate * STEREO * SECONDS;
+    int length = this->blipbuf_sample_rate * STEREO * (length_sec + 1);
     short *buf = new short[length];
     gme_play(this->emu, length, buf);
-    int byte_length = length * sizeof(short);
-    QByteArray blip_byte_array { reinterpret_cast<char*>(buf), byte_length };
     delete[] buf;
 }
 
-void NsfAudioFile::convert_apulog_to_runs() {
+void NsfAudioFile::convert_apulog_to_runs(qreal length_sec) {
     Nes_Apu *apu = static_cast<Nsf_Emu*>(this->emu)->apu_();
     MiniApu miniapu;
     QVector<ToneObject> tones[3];
     bool has_previous[3] { false, false, false };
     bool new_tone[3] { false, false, false };
+    sampleoff last_sample = length_sec * 1789773; /* TODO: Don't hard-code the CPU frequency. */
     ToneObject tone[3];
     for (int channel_i = 0; channel_i < 3; channel_i += 1) {
         tone[channel_i].start = apu->apu_log.first().cpu_cycle;
     }
-    bool prev_sweep_enabled = miniapu.squares[0].sweep_enabled();
-    bool prev_sweep_negate = miniapu.squares[0].sweep_negate();
-    int prev_sweep_shift = miniapu.squares[0].sweep_shift();
+    /* TODO: Take sweep into account when deciding whether two tones are different. */
+    /* TODO: Take envelope into account when deciding whether two tones are different. */
     //int prev_sweep_period = miniapu.squares[0].sweep_period();
     short sweep_end[2] { -1, -1 };
     std::sort(apu->apu_log.begin(), apu->apu_log.end());
@@ -127,7 +123,9 @@ void NsfAudioFile::convert_apulog_to_runs() {
             miniapu.triangle.timed_out_linear = true;
         } else if (entry.event == apu_log_event::reloaded_linear) {
             miniapu.triangle.timed_out_linear = false;
-        } else if (entry.event == apu_log_event::sweep) {
+        } else if (entry.event == apu_log_event::sweep && entry.cpu_cycle < last_sample) {
+            // TODO: The last_sample condition above is not the best way
+            // to make cut-off sweeping tones render accurately.
             sweep_end[static_cast<int>(entry.channel)] = entry.data;
         }
         for (int channel_i = 0; channel_i < 3; channel_i += 1) {
@@ -175,19 +173,34 @@ void NsfAudioFile::convert_apulog_to_runs() {
             if (new_tone[channel_i] || !has_previous[channel_i]) {
                 tones[channel_i].append(tone[channel_i]);
                 tone[channel_i] = ToneObject {};
-                prev_sweep_enabled = miniapu.squares[0].sweep_enabled();
-                prev_sweep_negate = miniapu.squares[0].sweep_negate();
-                prev_sweep_shift = miniapu.squares[0].sweep_shift();
-                //prev_sweep_period = miniapu.squares[0].sweep_period();
                 has_previous[channel_i] = true;
                 new_tone[channel_i] = false;
             }
         }
     }
-    // Discard the last tone because we don't know how long it is.
-    tones[0].removeLast();
-    tones[1].removeLast();
-    tones[2].removeLast();
+    for (int channel_i = 0; channel_i < 3; channel_i += 1) {
+        ToneObject &final_tone = tones[channel_i].last();
+        while (final_tone.start >= last_sample) {
+            tones[channel_i].removeLast();
+            final_tone = tones[channel_i].last();
+        }
+        ToneObject filler_tone;
+        if (final_tone.length == 0 || final_tone.start + final_tone.length > last_sample) {
+            filler_tone = final_tone;
+            tones[channel_i].removeLast();
+        }
+        sampleoff filled = filler_tone.start;
+        while (filled < last_sample) {
+            // Qt crashes if a tone is 2^26 samples long or longer, so we need to make several smaller tones.
+            filler_tone.start = filled;
+            filler_tone.length = 1789773;
+            if (filler_tone.start + filler_tone.length > last_sample) {
+                filler_tone.length = last_sample - filler_tone.start;
+            }
+            filled += filler_tone.length;
+            tones[channel_i].append(filler_tone);
+        }
+    }
     this->channel0->set_tones(tones[0]);
     this->channel1->set_tones(tones[1]);
     this->channel2->set_tones(tones[2]);

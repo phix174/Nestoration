@@ -14,8 +14,8 @@ public:
 
     void open(QString file_name);
     void list_tracks();
-    void read_gme_buffer();
-    void convert_apulog_to_runs();
+    void read_gme_buffer(qreal length_sec);
+    void convert_apulog_to_runs(qreal length_sec);
 
 signals:
     void emuChanged(Music_Emu *emu);
@@ -25,7 +25,7 @@ signals:
 
 public slots:
     void openClicked();
-    void select_track(qint16 track_num, qint32 length_msec);
+    void select_track(qint16 track_num, qreal length_sec);
 
 private:
     Music_Emu *emu { nullptr };

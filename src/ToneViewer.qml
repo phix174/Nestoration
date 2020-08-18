@@ -122,7 +122,6 @@ Item {
                     Row {
                         id: mainrow
                         height: parent.height
-                        width: 1789773 * 100 /* TODO: Remove this */
 
                         Repeater {
                             model: mainrepeater_model
