@@ -90,7 +90,10 @@ void NsfAudioFile::read_gme_buffer(qreal length_sec) {
     const int STEREO = 2;
     int length = this->blipbuf_sample_rate * STEREO * (length_sec + 1);
     short *buf = new short[length];
+    Nes_Apu *apu = static_cast<Nsf_Emu*>(this->emu)->apu_();
+    apu->apu_log_enabled = true;
     gme_play(this->emu, length, buf);
+    apu->apu_log_enabled = false;
     delete[] buf;
 }
 

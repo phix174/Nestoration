@@ -116,6 +116,7 @@ public:
 	void run_until( nes_time_t );
 
 	QList<apu_log_t> apu_log;
+	bool apu_log_enabled = false;
 	
 public:
 	Nes_Apu();

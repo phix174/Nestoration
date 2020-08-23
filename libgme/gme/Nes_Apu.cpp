@@ -202,52 +202,56 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 				square2.clock_length( 0x20 );
 				noise.clock_length( 0x20 );
 				triangle.clock_length( 0x80 ); // different bit for halt flag on triangle
-				if (!(square1.regs[0] & 0x20) && old_square1_length_counter > 0 && square1.length_counter <= 0) {
-					apu_log_t entry {
-						past_timeframe_cycles + time,
-						apu_log_event::timeout
-					};
-					entry.channel = 0;
-					apu_log.append(entry);
-				}
-				if (!(square2.regs[0] & 0x20) && old_square2_length_counter > 0 && square2.length_counter <= 0) {
-					apu_log_t entry {
-						past_timeframe_cycles + time,
-						apu_log_event::timeout
-					};
-					entry.channel = 1;
-					apu_log.append(entry);
-				}
-				if (!(triangle.regs[0] & 0x80) && old_triangle_length_counter > 0 && triangle.length_counter <= 0) {
-					apu_log_t entry {
-						past_timeframe_cycles + time,
-						apu_log_event::timeout
-					};
-					entry.channel = 2;
-					apu_log.append(entry);
+				if (apu_log_enabled) {
+					if (!(square1.regs[0] & 0x20) && old_square1_length_counter > 0 && square1.length_counter <= 0) {
+						apu_log_t entry {
+							past_timeframe_cycles + time,
+							apu_log_event::timeout
+						};
+						entry.channel = 0;
+						apu_log.append(entry);
+					}
+					if (!(square2.regs[0] & 0x20) && old_square2_length_counter > 0 && square2.length_counter <= 0) {
+						apu_log_t entry {
+							past_timeframe_cycles + time,
+							apu_log_event::timeout
+						};
+						entry.channel = 1;
+						apu_log.append(entry);
+					}
+					if (!(triangle.regs[0] & 0x80) && old_triangle_length_counter > 0 && triangle.length_counter <= 0) {
+						apu_log_t entry {
+							past_timeframe_cycles + time,
+							apu_log_event::timeout
+						};
+						entry.channel = 2;
+						apu_log.append(entry);
+					}
 				}
 
 				square1.clock_sweep( -1 );
 				square2.clock_sweep( 0 );
 				square1_period = ((square1.regs[3] & 0x07) << 8) + square1.regs[2];
 				square2_period = ((square2.regs[3] & 0x07) << 8) + square2.regs[2];
-				if (square1_period != old_square1_period) {
-					apu_log_t entry {
-						past_timeframe_cycles + time,
-						apu_log_event::sweep
-					};
-					entry.channel = 0;
-					entry.data = square1_period;
-					apu_log.append(entry);
-				}
-				if (square2_period != old_square2_period) {
-					apu_log_t entry {
-						past_timeframe_cycles + time,
-						apu_log_event::sweep
-					};
-					entry.channel = 1;
-					entry.data = square2_period;
-					apu_log.append(entry);
+				if (apu_log_enabled) {
+					if (square1_period != old_square1_period) {
+						apu_log_t entry {
+							past_timeframe_cycles + time,
+							apu_log_event::sweep
+						};
+						entry.channel = 0;
+						entry.data = square1_period;
+						apu_log.append(entry);
+					}
+					if (square2_period != old_square2_period) {
+						apu_log_t entry {
+							past_timeframe_cycles + time,
+							apu_log_event::sweep
+						};
+						entry.channel = 1;
+						entry.data = square2_period;
+						apu_log.append(entry);
+					}
 				}
 
 				// frame 2 is slightly shorter in mode 1
@@ -273,20 +277,22 @@ void Nes_Apu::run_until_( nes_time_t end_time )
 		// clock envelopes and linear counter every frame
 		int old_triangle_linear_counter = triangle.linear_counter;
 		triangle.clock_linear_counter();
-		if (old_triangle_linear_counter > 0 && triangle.linear_counter <= 0) {
-			apu_log_t entry {
-				past_timeframe_cycles + time,
-				apu_log_event::timeout_linear
-			};
-			entry.channel = 2;
-			apu_log.append(entry);
-		} else if (old_triangle_linear_counter <= 0 && triangle.linear_counter > 0) {
-			apu_log_t entry {
-				past_timeframe_cycles + time,
-				apu_log_event::reloaded_linear
-			};
-			entry.channel = 2;
-			apu_log.append(entry);
+		if (apu_log_enabled) {
+			if (old_triangle_linear_counter > 0 && triangle.linear_counter <= 0) {
+				apu_log_t entry {
+					past_timeframe_cycles + time,
+					apu_log_event::timeout_linear
+				};
+				entry.channel = 2;
+				apu_log.append(entry);
+			} else if (old_triangle_linear_counter <= 0 && triangle.linear_counter > 0) {
+				apu_log_t entry {
+					past_timeframe_cycles + time,
+					apu_log_event::reloaded_linear
+				};
+				entry.channel = 2;
+				apu_log.append(entry);
+			}
 		}
 		square1.clock_envelope();
 		square2.clock_envelope();
@@ -360,13 +366,15 @@ void Nes_Apu::write_register( nes_time_t time, nes_addr_t addr, int data )
 	if ( unsigned (addr - start_addr) > end_addr - start_addr )
 		return;
 
-	apu_log_t entry {
-		past_timeframe_cycles + time,
-		apu_log_event::register_write
-	};
-	entry.address = addr;
-	entry.data = static_cast<char>(data);
-	apu_log.append(entry);
+	if (apu_log_enabled) {
+		apu_log_t entry {
+			past_timeframe_cycles + time,
+			apu_log_event::register_write
+		};
+		entry.address = addr;
+		entry.data = static_cast<char>(data);
+		apu_log.append(entry);
+	}
 	
 	run_until_( time );
 	
