@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
     Player player { audio_format };
     QObject::connect(&nsf, SIGNAL(channelRunsChanged(QList<QList<Run>>)),
                      &player, SLOT(setChannels(QList<QList<Run>>)));
-    QObject::connect(&nsf, SIGNAL(emuChanged(Music_Emu*)),
-                     &player, SLOT(setEmu(Music_Emu*)));
+    QObject::connect(&nsf, SIGNAL(emuChanged(Music_Emu*, qreal)),
+                     &player, SLOT(setEmu(Music_Emu*, qreal)));
     qRegisterMetaType<ChannelModel*>("ChannelModel*");
     engine.rootContext()->setContextProperty("audiofile", &nsf);
     engine.rootContext()->setContextProperty("player", &player);

@@ -23,7 +23,7 @@ public:
 
 public slots:
     void setChannels(QList<QList<Run>> channel_runs);
-    void setEmu(Music_Emu *emu);
+    void setEmu(Music_Emu *emu, qreal length_sec);
     void handleNotify();
     void handleStateChanged(QAudio::State new_state);
     void handlePositionChanged(qint64 byte_position);

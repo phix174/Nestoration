@@ -29,14 +29,14 @@ void Player::setChannels(QList<QList<Run>> channel_runs) {
     this->generator->setChannels(channel_runs);
 }
 
-void Player::setEmu(Music_Emu *emu) {
+void Player::setEmu(Music_Emu *emu, qreal length_sec) {
     this->audio->reset();
     this->position = 0;
     this->bytes_played = 0;
     this->seek_offset = 0;
     emit this->playerPositionChanged(this->position);
     this->nsf_pcm->close();
-    this->nsf_pcm->set_emu(emu);
+    this->nsf_pcm->set_emu(emu, length_sec);
     this->nsf_pcm->open(QIODevice::ReadOnly);
 }
 
@@ -48,11 +48,12 @@ void Player::start() {
     }
 }
 
-void Player::seek(qint64 sample_position) {
+void Player::seek(qint64 nes_sample_position) {
     qreal sample_ratio = this->out_format.sampleRate() / 1789773.0; /* TODO: Don't hard-code 1789773. */
-    qint64 byte_position = std::round(sample_position * sample_ratio) * this->out_format.bytesPerFrame();
+    qint64 blip_sample_position = std::round(nes_sample_position * sample_ratio);
+    qint64 byte_position = blip_sample_position * this->out_format.bytesPerFrame();
     this->seek_offset = byte_position - this->bytes_played;
-    this->nsf_pcm->seek_sample(byte_position / 2);
+    this->nsf_pcm->seek_sample(blip_sample_position);
 }
 
 void Player::play_pause() {
@@ -93,6 +94,11 @@ void Player::handleNotify() {
 
 void Player::handleStateChanged(QAudio::State new_state) {
     qDebug() << "QAudioOutput state changed to:" << new_state;
+    if (new_state == QAudio::IdleState && this->nsf_pcm->atEnd()) {
+        this->pause();
+        qDebug() << "Reached the end of the track.";
+        return;
+    }
     qDebug() << "Error:" << this->audio->error();
 }
 

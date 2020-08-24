@@ -18,9 +18,9 @@ public:
     void convert_apulog_to_runs(qreal length_sec);
 
 signals:
-    void emuChanged(Music_Emu *emu);
     void fileOpened(QString file_name);
     void tracksListed(QStringList tracks, QList<int> track_lengths);
+    void emuChanged(Music_Emu *emu, qreal length_sec);
     void trackOpened(qint16 file_track);
 
 public slots:

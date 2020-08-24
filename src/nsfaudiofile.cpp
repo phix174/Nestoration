@@ -82,7 +82,7 @@ void NsfAudioFile::select_track(qint16 track_num, qreal length_sec) {
     this->read_gme_buffer(length_sec);
     this->convert_apulog_to_runs(length_sec);
     gme_seek_samples(this->emu, 0);
-    emit this->emuChanged(this->emu);
+    emit this->emuChanged(this->emu, length_sec);
     emit this->trackOpened(this->file_track);
 }
 
