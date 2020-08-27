@@ -69,6 +69,8 @@ void NsfAudioFile::select_track(qint16 track_num, qreal length_sec) {
     if (track_num != INVALID_TRACK && track_num < 256) {
         qDebug() << "Track" << track_num << "selected";
         gme_enable_accuracy(this->emu, 1);
+        Nes_Apu *apu = static_cast<Nsf_Emu*>(this->emu)->apu_();
+        apu->apu_log_enabled = true;
         gme_err_t start_err = gme_start_track(this->emu, track_num);
         if (!start_err) {
             this->is_open = true;
@@ -91,7 +93,6 @@ void NsfAudioFile::read_gme_buffer(qreal length_sec) {
     int length = this->blipbuf_sample_rate * STEREO * (length_sec + 1);
     short *buf = new short[length];
     Nes_Apu *apu = static_cast<Nsf_Emu*>(this->emu)->apu_();
-    apu->apu_log_enabled = true;
     gme_play(this->emu, length, buf);
     apu->apu_log_enabled = false;
     delete[] buf;
