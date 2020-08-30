@@ -28,9 +28,9 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
-    app.setOrganizationName("NestorQtion");
-    app.setOrganizationDomain("NestorQtion.com");
-    app.setApplicationName("NestorQtion");
+    app.setOrganizationName("Nestoration");
+    app.setOrganizationDomain("Nestoration.com");
+    app.setApplicationName("Nestoration");
     QQmlApplicationEngine engine;
     QSurfaceFormat surface_format;
     surface_format.setSamples(4);

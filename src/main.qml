@@ -9,7 +9,7 @@ ApplicationWindow {
     height: 1080
     property string open_file_name: qsTr('')
     property int open_file_track: -1
-    title: qsTr("NestorQtion") + (open_file_name ? " - " + open_file_name + (open_file_track > -1 ? " #" + (open_file_track + 1) : "") : "")
+    title: qsTr("Nestoration") + (open_file_name ? " - " + open_file_name + (open_file_track > -1 ? " #" + (open_file_track + 1) : "") : "")
     readonly property int sHAPE_NONE: 0
     readonly property int sHAPE_SQUARE_EIGHTH: 1
     readonly property int sHAPE_SQUARE_QUARTER: 2

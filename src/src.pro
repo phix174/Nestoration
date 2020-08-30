@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = nestorqtion
+TARGET = nestoration
 
 QT += quick
 QT += widgets
