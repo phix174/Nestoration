@@ -20,6 +20,7 @@ enum apu_log_event {
 };
 
 struct apu_log_t {
+	apu_log_t (long long cpu_cycle, apu_log_event event) : cpu_cycle(cpu_cycle), event(event) {};
 	bool operator<(const apu_log_t &other) const {
 		return this->cpu_cycle < other.cpu_cycle;
 	}
