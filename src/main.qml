@@ -26,7 +26,7 @@ ApplicationWindow {
             shape === sHAPE_SQUARE_THREEQUARTERS
         )
     }
-    property real global_xScale: toneviewer0.scroller_width / toneviewer0.mainrow_width
+    property real global_xScale: toneviewer0.scroller.width / toneviewer0.mainrow_width
     function zoomToneViewer(channel_i) {
         var viewers = [toneviewer0, toneviewer1, toneviewer2];
         var viewer_to_toggle = viewers[channel_i];
@@ -54,7 +54,7 @@ ApplicationWindow {
         }
         onTrackOpened: {
             controls.visible = true;
-            global_xScale = Qt.binding(function() { return toneviewer0.scroller_width / toneviewer0.mainrow_width });
+            global_xScale = Qt.binding(function() { return toneviewer0.scroller.width / toneviewer0.mainrow_width });
             global_scrollbar.position = 0;
             root.open_file_track = file_track;
         }
@@ -63,6 +63,21 @@ ApplicationWindow {
     Rectangle {
         anchors.fill: parent
         color: "#444444"
+
+        Keys.onPressed: {
+            var control = event.modifiers & Qt.ControlModifier;
+            var zoom_in_keys = [Qt.Key_Plus, Qt.Key_Equal];
+            var zoom_out_keys = [Qt.Key_Minus, Qt.Key_Underscore];
+            var scale_factor = 1.2;
+            var scrollbar = toneviewer0.scroller.ScrollBar.horizontal;
+            var center = scrollbar.position + scrollbar.size / 2.0;
+            if (control && zoom_in_keys.includes(event.key)) {
+                toneviewer0.zoom_in(scale_factor, center);
+            }
+            if (control && zoom_out_keys.includes(event.key)) {
+                toneviewer0.zoom_out(scale_factor, center);
+            }
+        }
 
         ColumnLayout {
             anchors.fill: parent

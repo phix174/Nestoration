@@ -13,8 +13,34 @@ Item {
     property int noteSpacing: if (noteHeight > 6) { 1 } else { 0 }
     height: noteHeight * tone_count
     property int paddedHighestTone: audiofile.highestTone + extra_tones
-    property alias scroller_width: scroller.width
+    property alias scroller: scroller
     property alias mainrow_width: mainrow.width
+    function zoom_in(scale_factor, center) {
+        if (global_xScale * scale_factor > 1) {
+            // If zooming in would zoom in too far, only zoom in to 1:1.
+            scale_factor = 1 / global_xScale;
+        }
+        finalize_zoom(scale_factor, center);
+    }
+    function zoom_out(scale_factor, center) {
+        if (global_xScale / scale_factor > scroller.width / mainrow.width) {
+            // If zooming out wouldn't zoom out too far, go ahead and do it.
+            scale_factor = 1 / scale_factor;
+            finalize_zoom(scale_factor, center);
+        } else {
+            // Otherwise, only zoom out as much as needed to fit the whole file.
+            global_xScale = Qt.binding(function() { return scroller.width / mainrow.width });
+        }
+    }
+    function finalize_zoom(scale_factor, center) {
+        var position_old = scroller.ScrollBar.horizontal.position;
+        var position_new = Math.max(0, position_old + (center - position_old) * (1 - 1 / scale_factor));
+        global_xScale *= scale_factor;
+        if (position_new + scroller.ScrollBar.horizontal.size > 1) {
+            position_new = Math.max(0, 1 - scroller.ScrollBar.horizontal.size);
+        }
+        global_scrollbar.position = position_new;
+    }
 
     Connections {
         target: audiofile
@@ -70,30 +96,12 @@ Item {
                     height: parent.height
                     width: Math.max(mainrow.width, scroller.width)
                     onWheel: {
-                        var position_old = scroller.ScrollBar.horizontal.position;
                         var scale_factor = 1.2;
-                        var bound_again = false;
+                        var center = wheel.x / (mainrow.width * global_xScale);
                         if (wheel.angleDelta.y < 0) {
-                            if (global_xScale / scale_factor > scroller.width / mainrow.width) {
-                                // If zooming out wouldn't zoom out too far, go ahead and do it.
-                                scale_factor = 1 / scale_factor;
-                            } else {
-                                // Otherwise, only zoom out as much as needed to fit the whole file.
-                                global_xScale = Qt.binding(function() { return scroller.width / mainrow.width });
-                                bound_again = true;
-                            }
-                        } else if (global_xScale * scale_factor > 1) {
-                            // If zooming in would zoom in too far, only zoom in to 1:1.
-                            scale_factor = 1 / global_xScale;
-                        }
-                        if (!bound_again) {
-                            var mouse_x = wheel.x / (mainrow.width * global_xScale);
-                            var position_new = Math.max(0, position_old + (mouse_x - position_old) * (1 - 1 / scale_factor));
-                            global_xScale *= scale_factor;
-                            if (position_new + scroller.ScrollBar.horizontal.size > 1) {
-                                position_new = Math.max(0, 1 - scroller.ScrollBar.horizontal.size);
-                            }
-                            global_scrollbar.position = position_new;
+                            zoom_out(scale_factor, center);
+                        } else if (wheel.angleDelta.y > 0) {
+                            zoom_in(scale_factor, center);
                         }
                     }
                     onPressed: {
